@@ -597,8 +597,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // the index's large mark: mn as an engineering drawing, pared down: the mark's holes as heavy rings, each as wide as
     // the logo's dot (0.9 on a pitch of 1, so the gaps are the logo's), with dash-dot centre lines and top and base
     // reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
-    // as the mark, from its top line to its base. On a phone the words go under the mark instead, left-aligned with it,
-    // at the same size. Units are dot pitches.
+    // as the mark, from its top line to its base. On a phone the words go under the mark instead, each row exactly as wide
+    // as the mark. Units are dot pitches.
     const stacked = window.matchMedia ? matchMedia("(max-width: 37.5rem)") : { matches: false };
     function drawBig() {
       const svg = document.querySelector(".mn-big");
@@ -613,9 +613,15 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const TX = under ? 0 : W + 1.8, TY = under ? 6 + GAP : 0;          // where the words' block starts
       const probe = svgEl("text", { class: "aed", style: `font-size: ${f(FS)}px` });   // inline, over .t-mark text's size
       svg.append(probe);
-      const tw = Math.max(0, ...words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); }));
+      const widths = words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); });
+      const tw = Math.max(0, ...widths);
+      // on a phone, each row is sized to run exactly the mark's width, and the rows sit a little apart: each row's
+      // baseline is the last one's descenders (0.21 em), a gap, then its own ascenders (0.75 em) further down
+      const rows = words.map((wd, i) => ({ wd, fs: under && widths[i] ? FS * W / widths[i] : FS }));
+      let by = TY;
+      rows.forEach((r, i) => { by += (i ? 0.21 * rows[i - 1].fs + 0.35 : 0) + 0.75 * r.fs; r.y = under ? by : ASC + i * FS; });
       probe.remove();
-      const O = under ? { x0: -0.5, y0: -0.7, x1: Math.max(W, tw) + 0.5, y1: TY + 6.4 }
+      const O = under ? { x0: -0.5, y0: -0.7, x1: W + 0.5, y1: by + 0.21 * (rows.length ? rows[rows.length - 1].fs : 0) + 0.5 }
                       : { x0: -2.4, y0: -1.0, x1: TX + tw + 0.6, y1: 7.0 };
       svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0 + 0.2) / (O.y1 - O.y0 + 0.2)).toFixed(3));
@@ -631,10 +637,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       line(-1.9, 6, W + 0.3, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");
 
       // ---- the words, beside the mark
-      words.forEach((wd, i) => {
-        const t = el("text", { x: f(TX), y: f(TY + ASC + i * FS), class: "aed", style: `font-size: ${f(FS)}px` });
-        t.textContent = wd;
-      });
+      for (const r of rows) {
+        const t = el("text", { x: f(TX), y: f(r.y), class: "aed", style: `font-size: ${f(r.fs)}px` });
+        t.textContent = r.wd;
+      }
 
       svg.append(sheet);
       // the mn's 62 holes, as heavy rings: the ring's outer edge is the logo's dot (r 0.45), its weight inside that

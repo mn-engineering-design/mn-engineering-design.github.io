@@ -49,7 +49,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 /* ---- title block, top: the mark, the sections, a menu on narrow screens */
 .hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;
-       display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); }
+       display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); transition: transform 0.5s ease, visibility 0.5s; }
+.home-on .hdr { transform: translateY(-100%); visibility: hidden; }          /* off the home sheet: back when you move on */
 .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); }
 .brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
@@ -85,10 +86,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .ftr button svg { width: 0.9rem; height: 0.9rem; }
 
 /* ---- the sheets: one at a time between the title blocks; a step slides the whole sheet up and the next in after it */
-.deck { position: fixed; left: 0; right: 0; top: calc(var(--hdr) + var(--top)); bottom: calc(var(--ftr) + var(--bot)); overflow: clip; touch-action: none; }
+.deck { position: fixed; left: 0; right: 0; top: var(--top); bottom: calc(var(--ftr) + var(--bot)); overflow: clip; touch-action: none; }
 .editing .deck { touch-action: auto; }
 .slide { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; overflow: clip;
-         padding-block: clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
+         padding-block: calc(var(--hdr) + clamp(1rem, 4vh, 3rem)) clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
+.slide[data-id=""] { padding-top: clamp(1rem, 4vh, 3rem); }                 /* the home sheet has no title block over it: it fills the screen */
 .slide.shown { visibility: visible; }
 .slide.anim { transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
 
@@ -109,13 +111,12 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .mark { display: block; width: auto; fill: currentColor; overflow: visible; }
 
 /* ---- sheet 00: the index */
-.t-grid { display: grid; gap: clamp(1rem, 3.5vh, 2.25rem); max-width: none; }          /* the index runs the full width of the page */
+.t-grid { display: grid; max-width: none; }                                                /* the index runs the full width of the page */
 .t-top { display: grid; gap: clamp(1.25rem, 3.5vh, 2.25rem); align-items: center; min-width: 0; }
-.t-under { display: grid; gap: clamp(1rem, 3vh, 2rem); align-items: start; min-width: 0; }
 .t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
-/* the drawing, with the words beside it on a wide screen, the two centred together; on short screens it narrows to leave
-   room for the projects under it (the sheet is 21.8 x 13.4) */
-.t-mark { justify-self: center; width: min(100%, (100vh - 22rem) * 1.63); width: min(100%, (100svh - 22rem) * 1.63); }
+/* the drawing, with the words beside it on a wide screen, the two centred together and filling the sheet; on a phone the
+   words go under it (the drawing's sheet is 21.8 x 13.4) */
+.t-mark { justify-self: center; width: min(100%, (100vh - 19rem) * 1.63); width: min(100%, (100svh - 19rem) * 1.63); }
 .t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
@@ -142,7 +143,20 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
 .t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key, .t-mark.compact .view-tag { display: none; }
 .t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; }
-.intro { margin: 0; width: min-content; font: 700 clamp(2.2rem, 5.2vw, 4.4rem)/1.0 var(--display); letter-spacing: -0.035em; color: var(--ink); }   /* a word a line */
+.intro, .x3d-layer { margin: 0; width: min-content; font: 700 clamp(2.4rem, 4.9vw, 5.2rem)/1.0 var(--display); letter-spacing: -0.035em; }
+.intro { position: relative; color: var(--ink); }
+/* the words, extruded: copies stacked behind them (made by the script, x3d), darker towards the back, the whole block
+   swaying out of the page's plane; still, at a slant, under reduced motion; flat while you edit them */
+.x3d { perspective: 60rem; perspective-origin: 50% 40%; }
+.x3d-spin { position: relative; transform-style: preserve-3d; transform: rotateY(-24deg) rotateX(8deg); }
+.x3d-layer { position: absolute; left: 0; top: 0; white-space: pre-wrap; pointer-events: none; user-select: none; }
+.t-lead .x3d-layer { text-align: inherit; }
+@media (prefers-reduced-motion: no-preference) {
+  .x3d-spin { animation: x3d-sway 11s ease-in-out infinite alternate; }
+  @keyframes x3d-sway { 0% { transform: rotateY(-34deg) rotateX(10deg); } 50% { transform: rotateY(4deg) rotateX(-2deg); } 100% { transform: rotateY(34deg) rotateX(9deg); } }
+}
+.editing .x3d-spin { animation: none; transform: none; }
+.editing .x3d-layer { display: none; }   /* a word a line */
 .t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
 /* the boot: dots print left to right, then the dimensions draw */
 @media (prefers-reduced-motion: no-preference) {
@@ -154,25 +168,13 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .dot { transform-box: fill-box; transform-origin: center; }
 
 /* the model list: a parts list, one row per model, each row going to its sheet */
-.models { width: 100%; min-width: 0; border-top: 1.5px solid var(--ink); }
-.models-head, .models a { display: grid; grid-template-columns: minmax(0, 1fr) auto 1rem; align-items: center; gap: 1rem; }
-.models-head { padding: 0.55rem 0; border-bottom: 1px solid var(--rule); }
-.models ol { list-style: none; margin: 0; padding: 0; }
-.models a { padding: 0.8rem 0; border-bottom: 1px solid var(--hair); text-decoration: none; color: var(--ink); }
-.models a:hover { background: linear-gradient(90deg, var(--sheet), transparent); }
-.models .mark { height: 1.35rem; }
-.models .type { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
-.models .go { width: 1rem; height: 1rem; color: var(--muted); transition: transform 0.2s ease, color 0.2s ease; }
-.models a:hover .go { transform: translateX(3px); color: var(--ink); }
 @media (min-width: 60rem) {
-  .t-top { display: flex; justify-content: center; gap: clamp(2.5rem, 5vw, 4.5rem); }
-  .t-mark { flex: none; width: min(60%, (100vh - 22rem) * 1.63); width: min(60%, (100svh - 22rem) * 1.63); }
+  .t-top { display: flex; justify-content: center; gap: clamp(2.5rem, 5vw, 5.5rem); }
+  .t-mark { flex: none; width: min(61%, (100vh - 9rem) * 1.63); width: min(61%, (100svh - 9rem) * 1.63); }
   .t-lead { flex: none; }
 }
 @media (max-width: 59.99rem) { .t-lead { justify-items: center; text-align: center; } }
-@media (max-width: 30rem) { .models .type, .models-head span:nth-child(2) { display: none; } .models-head, .models a { grid-template-columns: minmax(0, 1fr) 1rem; } }
-@media (max-height: 640px) { .t-sub { display: none; } .models a { padding: 0.6rem 0; } }
-
+@media (max-height: 640px) { .t-sub { display: none; } }
 /* ---- a model's datasheet: what it is and its specification, beside a figure of it working */
 .p-body { display: grid; gap: clamp(1.25rem, 4vh, 2.5rem); align-items: center; }
 .p-text { display: grid; gap: clamp(0.7rem, 2vh, 1.1rem); justify-items: start; align-content: start; min-width: 0; }
@@ -317,17 +319,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       <div class="t-top">
       <div class="t-mark"><svg class="mn-big" aria-hidden="true"></svg></div>
       <div class="t-lead">
-        <p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p>
+        <div class="x3d"><div class="x3d-spin"><p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p></div></div>
         <p class="t-sub" data-slot="site.tagline" data-hint="A line under it, if you want one"></p>
-      </div>
-      </div>
-      <div class="t-under">
-      <div class="models" role="navigation" aria-label="Projects">
-        <div class="models-head label"><span>Project</span><span>Type</span><span></span></div>
-        <ol>
-          <li><a href="#flowmn"><span class="mark-hold" data-word="flow"><span class="sr-only">flowmn</span></span><span class="type">Desktop app</span><svg class="go" aria-hidden="true"><use href="#i-right"/></svg></a></li>
-          <li><a href="#tankmn"><span class="mark-hold" data-word="tank"><span class="sr-only">tankmn</span></span><span class="type">Lab facility</span><svg class="go" aria-hidden="true"><use href="#i-right"/></svg></a></li>
-        </ol>
       </div>
       </div>
     </div>
@@ -510,6 +503,26 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   };
 
   // ---- show the text: what you wrote, or (while editing) a hint where nothing is written yet
+  // ---- the index's words, extruded: LAYERS copies behind them, each a little further back and a little darker, kept in step
+  // with the words (your text, and as you edit it)
+  (function extrude() {
+    const front = document.querySelector(".x3d .intro");
+    if (!front) return;
+    const LAYERS = 28, DEPTH = 0.24;                                   // the depth, in em
+    const layers = [];
+    for (let k = LAYERS; k >= 1; k--) {
+      const l = document.createElement("span");
+      l.className = "x3d-layer"; l.setAttribute("aria-hidden", "true");
+      const u = k / LAYERS;                                            // 0 at the front, 1 at the back
+      l.style.transform = `translateZ(${(-u * DEPTH).toFixed(4)}em)`;
+      l.style.color = `rgb(${[0x8E, 0x94, 0x9B].map((c, j) => Math.round(c + ([0x2B, 0x2E, 0x33][j] - c) * u)).join(",")})`;
+      front.before(l); layers.push(l);
+    }
+    const copy = () => { for (const l of layers) l.textContent = front.textContent; };
+    copy();
+    new MutationObserver(copy).observe(front, { childList: true, characterData: true, subtree: true });
+  })();
+
   function render() {
     if (!content) return;
     for (const el of slots) {
@@ -814,6 +827,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const s = slides[index];
       marks.forEach((b, i) => (i === index ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")));
       document.body.classList.toggle("inv-on", s.classList.contains("inv"));
+      document.body.classList.toggle("home-on", index === 0 && !openId);   // the home sheet has no title block
       fName.textContent = openId === "about" ? "About" : s.dataset.name + (openId ? " · Details" : "");
       fPage.textContent = `${pad2(index)} / ${pad2(slides.length - 1)}`;
       fPrev.disabled = index === 0 || !!openId; fNext.disabled = index === slides.length - 1 || !!openId;

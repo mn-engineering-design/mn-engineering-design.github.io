@@ -120,6 +120,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
 .t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
+.t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
+.t-mark .dim-head { fill: var(--muted); stroke: none; }
+.t-mark .lbl { fill: var(--ink-2); font: 500 0.52px var(--mono); }
+/* the dimensions draw themselves in when the page opens: lines from their start, then arrowheads and numbers; --el
+   is how far in a redraw starts. Under reduced motion they're simply there */
+@media (prefers-reduced-motion: no-preference) {
+  .t-mark .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-in var(--dur) ease-in-out calc(var(--d) - var(--el, 0s)) both; }
+  .t-mark .show { animation: show-in 0.35s ease-out calc(var(--d) - var(--el, 0s)) both; }
+}
+@keyframes draw-in { to { stroke-dashoffset: 0; } }
+@keyframes show-in { from { opacity: 0; } }
 .t-mark .aed { fill: var(--charcoal); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
 .t-mark .hole { fill: var(--charcoal); stroke: none; }                                 /* the dots: solid, as in the logo */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
@@ -595,43 +606,60 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       g.append(c);
     });
 
-    // the index's large mark: mn as an engineering drawing, pared down: the mark's dots, solid as in the logo (0.9 on a
-    // pitch of 1), with dash-dot centre lines and top and base reference lines; and under it the words (the index's text,
-    // a word to a row), left-aligned, sharing one size, set so the widest row runs exactly the mark's width. Units are dot
-    // pitches.
+    // the index's large mark: mn as an engineering drawing: the mark's dots, solid as in the logo (0.9 on a pitch of 1),
+    // with faint dash-dot centre lines; its dimensions, drawn in one after another when the page opens: the width in dots
+    // across the top, the height in dots down the right, and an arrow to one dot giving its diameter; and under it the
+    // words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
+    let firstDrawn = 0;
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      // the words: measured in the drawing itself, then sized so the widest is as wide as the mark (W). The rows sit a
-      // little apart: each baseline is the last row's descenders (0.21 em), a gap, then its own ascenders (0.75 em) down
-      const words = (document.querySelector(".t-lead .intro")?.textContent || "").trim().split(/\s+/).filter(Boolean);
-      const W = 14, GAP = 1.3, PROBE = 2;
+      // a redraw (the fonts arriving, your text arriving) carries on the dimensions' drawing-in where it had got to
+      if (!firstDrawn) firstDrawn = performance.now();
+      host.style.setProperty("--el", ((performance.now() - firstDrawn) / 1000).toFixed(2) + "s");
+      // the words on one line, measured in the drawing itself, then sized to the mark's width (W)
+      const line1 = (document.querySelector(".t-lead .intro")?.textContent || "").trim().replace(/\s+/g, " ");
+      const W = 14, GAP = 1.0, PROBE = 2;
       const probe = svgEl("text", { class: "aed", style: `font-size: ${PROBE}px` });   // inline, over .t-mark text's size
+      probe.textContent = line1;
       svg.append(probe);
-      const tw = Math.max(0, ...words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); }));
+      const tw = line1 ? probe.getComputedTextLength() : 0;
       probe.remove();
-      const fs = tw ? PROBE * W / tw : PROBE;
-      let by = 6 + GAP;
-      const rows = words.map((wd, i) => ({ wd, y: (by += (i ? 0.21 * fs + 0.35 : 0) + 0.75 * fs) }));
-      const O = { x0: -0.9, y0: -0.8, x1: W + 0.9, y1: by + 0.21 * fs + 0.5 };
+      const fs = tw ? PROBE * W / tw : PROBE, wordsY = 6 + GAP + 0.734 * fs;
+      const O = { x0: -4.0, y0: -2.2, x1: W + 4.0, y1: wordsY + 0.21 * fs + 0.4 };   // even either side, so the mark sits centred
       svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0) / (O.y1 - O.y0)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
       const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
+      // drawn in: a line that draws itself from its start over `dur`, from `d` seconds; a mark that fades in at `d`
+      const stroke = (d, dur, pts) => el("path", { d: "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L"), pathLength: 1, class: "dim draw", style: `--d: ${d}s; --dur: ${dur}s` });
+      const head = (x, y, ang, d) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head show", style: `--d: ${d}s`, transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
+      const label = (x, y, str, d, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl show", style: `--d: ${d}s`, ...attrs }); t.textContent = str; return t; };
 
-      // ---- the mark's construction: centre lines through the m and the n and across, and its top and base lines
+      // ---- the mark's centre lines: the m, the n, and across
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
-      line(-0.7, 0, W + 0.7, 0, "ref fine-l");
-      line(-0.7, 6, W + 0.7, 6, "ref fine-l");
 
-      // ---- the words, under the mark
-      for (const r of rows) {
-        const t = el("text", { x: 0, y: f(r.y), class: "aed", style: `font-size: ${f(fs)}px` });
-        t.textContent = r.wd;
-      }
+      // ---- 1. the width, across the top: 14 dots
+      stroke(0.3, 0.3, [[0, -0.25], [0, -1.5]]); stroke(0.3, 0.3, [[W, -0.25], [W, -1.5]]);
+      stroke(0.6, 0.7, [[0, -1.2], [W, -1.2]]);
+      head(0, -1.2, 180, 1.2); head(W, -1.2, 0, 1.2);
+      label(W / 2, -1.45, String(W), 1.3, { "text-anchor": "middle" });
+      // ---- 2. the height, down the right of the n: 6 dots
+      stroke(1.7, 0.3, [[W + 0.25, 0], [W + 1.5, 0]]); stroke(1.7, 0.3, [[W + 0.25, 6], [W + 1.5, 6]]);
+      stroke(2.0, 0.6, [[W + 1.2, 0], [W + 1.2, 6]]);
+      head(W + 1.2, 0, -90, 2.5); head(W + 1.2, 6, 90, 2.5);
+      label(W + 1.5, 3.22, "6", 2.6);
+      // ---- 3. one dot's diameter: an arrow in from the upper left to the m's first dot
+      const ex = 0.5 - 0.45 * Math.SQRT1_2, ey = 0.5 - 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
+      stroke(3.0, 0.5, [[-1.9, -0.95], [-1.0, -0.95], [ex, ey]]);
+      head(ex, ey, 45, 3.45);
+      label(-2.0, -0.78, "\u00D8 0.9", 3.5, { "text-anchor": "end" });
+
+      // ---- the words, under the mark, one line
+      if (line1) { const t = el("text", { x: 0, y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }
 
       svg.append(sheet);
       // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1

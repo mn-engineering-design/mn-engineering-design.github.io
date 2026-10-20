@@ -597,7 +597,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // the index's large mark: mn as an engineering drawing, pared down: the mark's holes as heavy rings, each as wide as
     // the logo's dot (0.9 on a pitch of 1, so the gaps are the logo's), with dash-dot centre lines and top and base
     // reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
-    // as the mark, from its top line to its base. Units are dot pitches.
+    // as the mark, from its top line to its base. On a phone the words go under the mark instead, left-aligned with it,
+    // at the same size. Units are dot pitches.
+    const stacked = window.matchMedia ? matchMedia("(max-width: 37.5rem)") : { matches: false };
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
@@ -606,12 +608,15 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       // the base (Heros: ascenders 0.75 em above the baseline, descenders 0.21 below, rows 1 em apart); measured in the
       // drawing itself, so the sheet ends just past the widest row
       const words = (document.querySelector(".t-lead .intro")?.textContent || "").trim().split(/\s+/).filter(Boolean);
-      const W = 14, TX = W + 1.8, FS = 6 / (0.96 + Math.max(words.length - 1, 0)), ASC = 0.75 * FS;
+      const W = 14, FS = 6 / (0.96 + Math.max(words.length - 1, 0)), ASC = 0.75 * FS, GAP = 1.3;
+      const under = stacked.matches;                                     // a phone: the words under the mark
+      const TX = under ? 0 : W + 1.8, TY = under ? 6 + GAP : 0;          // where the words' block starts
       const probe = svgEl("text", { class: "aed", style: `font-size: ${f(FS)}px` });   // inline, over .t-mark text's size
       svg.append(probe);
       const tw = Math.max(0, ...words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); }));
       probe.remove();
-      const O = { x0: -2.4, y0: -1.0, x1: TX + tw + 0.6, y1: 7.0 };
+      const O = under ? { x0: -0.5, y0: -0.7, x1: Math.max(W, tw) + 0.5, y1: TY + 6.4 }
+                      : { x0: -2.4, y0: -1.0, x1: TX + tw + 0.6, y1: 7.0 };
       svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0 + 0.2) / (O.y1 - O.y0 + 0.2)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
@@ -627,7 +632,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
       // ---- the words, beside the mark
       words.forEach((wd, i) => {
-        const t = el("text", { x: f(TX), y: f(ASC + i * FS), class: "aed", style: `font-size: ${f(FS)}px` });
+        const t = el("text", { x: f(TX), y: f(TY + ASC + i * FS), class: "aed", style: `font-size: ${f(FS)}px` });
         t.textContent = wd;
       });
 
@@ -641,6 +646,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       }
       svg.append(holes);
       const compact = () => host.classList.toggle("compact", host.clientWidth < 640);
+      if (!host.dataset.stackWatched && stacked.addEventListener) { host.dataset.stackWatched = "1"; stacked.addEventListener("change", drawBig); }
       compact();
       if (!host.dataset.watched) {
         host.dataset.watched = "1";

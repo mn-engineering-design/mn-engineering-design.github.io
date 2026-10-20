@@ -596,8 +596,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
     // the index's large mark: mn as an engineering drawing, pared down: the mark's dots, solid as in the logo (0.9 on a
     // pitch of 1), with dash-dot centre lines and top and base reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
-    // as the mark, from its top line to its base. On a phone the words go under the mark instead, each row exactly as wide
-    // as the mark. Units are dot pitches.
+    // as the mark, from its top line to its base. On a phone the words go under the mark instead, the widest row exactly as
+    // wide as the mark and the others at its size. Units are dot pitches.
     const stacked = window.matchMedia ? matchMedia("(max-width: 37.5rem)") : { matches: false };
     function drawBig() {
       const svg = document.querySelector(".mn-big");
@@ -614,9 +614,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       svg.append(probe);
       const widths = words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); });
       const tw = Math.max(0, ...widths);
-      // on a phone, each row is sized to run exactly the mark's width, and the rows sit a little apart: each row's
-      // baseline is the last one's descenders (0.21 em), a gap, then its own ascenders (0.75 em) further down
-      const rows = words.map((wd, i) => ({ wd, fs: under && widths[i] ? FS * W / widths[i] : FS }));
+      // on a phone, the rows share one size, set so the widest word runs exactly the mark's width, and sit a little
+      // apart: each row's baseline is the last one's descenders (0.21 em), a gap, then its own ascenders (0.75 em) down
+      const rows = words.map((wd) => ({ wd, fs: under && tw ? FS * W / tw : FS }));
       let by = TY;
       rows.forEach((r, i) => { by += (i ? 0.21 * rows[i - 1].fs + 0.35 : 0) + 0.75 * r.fs; r.y = under ? by : ASC + i * FS; });
       probe.remove();

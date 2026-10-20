@@ -119,9 +119,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
 .t-mark .dim-head { fill: var(--muted); stroke: none; }
-.t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
 .t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
-.t-mark .grid-l line { stroke: var(--rule); stroke-width: 0.012; }
 .t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
 .t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
@@ -131,13 +129,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .tb-key { font-size: 0.24px; letter-spacing: 0.03px; }
 .t-mark .tb-val { fill: var(--ink-2); font-size: 0.36px; font-weight: 600; }
 .t-mark .tb-title { fill: var(--ink); font-size: 0.42px; letter-spacing: 0.06px; }
-.t-mark .zone { font-size: 0.3px; }
-.t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
 .t-mark .aed { fill: var(--ink); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
 .t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.1; }   /* holes: a visible outline, heavier than the dimensions */
-.t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
-.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key { display: none; }
+.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .tb-key { display: none; }
 .t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; }
 .intro { margin: 0; font: 700 clamp(1.4rem, 3vw, 2rem)/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); }
 /* the words are drawn in the drawing (from this text); the text itself shows only while you edit it */
@@ -614,11 +609,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     const small = document.querySelector(".mn-small");
     small.setAttribute("viewBox", "0 0 14 6"); dots(small);
 
-    // the index's large mark: mn as an engineering drawing on its own sheet. A zoned border and a title block (titled
-    // MODEL NUMBER); a front view with a faint construction grid at the dot pitch, dash-dot centre lines, top and base
-    // reference lines, chain and overall dimensions, a callout for the holes and a position tolerance to datums A and B;
-    // and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall as the mark,
-    // from its top line to its base. Units are dot pitches (p).
+    // the index's large mark: mn as an engineering drawing, with no border: a title block (titled MODEL NUMBER) at the
+    // bottom right; the mark's holes with dash-dot centre lines, top and base reference lines, chain and overall
+    // dimensions and the size of one hole; and, beside it, the words (the index's text, a word to a row), their rows
+    // together exactly as tall as the mark, from its top line to its base. Units are dot pitches.
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
@@ -646,22 +640,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
         text(tx, (ya + yb) / 2, label, cls, { "text-anchor": "middle", transform: `rotate(90 ${f(tx)} ${f((ya + yb) / 2)})` });
       };
 
-      // the sheet: border, zone band with 6 zones across and A to C down
-      el("rect", { x: O.x0, y: O.y0, width: f(O.x1 - O.x0), height: f(O.y1 - O.y0), class: "frame-out" });
-      el("rect", { x: O.x0 + IN, y: O.y0 + IN, width: f(O.x1 - O.x0 - 2 * IN), height: f(O.y1 - O.y0 - 2 * IN), class: "frame" });
-      const NZ = 6, zw = (O.x1 - O.x0) / NZ, zh = (O.y1 - O.y0) / 3;
-      for (let z = 0; z < NZ; z++) {
-        const x = O.x0 + z * zw;
-        if (z) { line(x, O.y0, x, O.y0 + IN, "frame fine-l"); line(x, O.y1 - IN, x, O.y1, "frame fine-l"); }
-        text(x + zw / 2, O.y0 + 0.33, String(z + 1), "zone fine", { "text-anchor": "middle" });
-        text(x + zw / 2, O.y1 - 0.12, String(z + 1), "zone fine", { "text-anchor": "middle" });
-      }
-      for (let z = 0; z < 3; z++) {
-        const y = O.y0 + z * zh;
-        if (z) { line(O.x0, y, O.x0 + IN, y, "frame fine-l"); line(O.x1 - IN, y, O.x1, y, "frame fine-l"); }
-        text(O.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
-        text(O.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
-      }
       // the title block, bottom right: the part, its title, drawing number and revision
       const tb = { x1: O.x1 - IN, y1: O.y1 - IN }; tb.x0 = tb.x1 - 13.2; tb.y0 = tb.y1 - 1.05;
       const c1 = tb.x0 + 2.4, c2 = tb.x0 + 8.4, c3 = tb.x0 + 11.2;
@@ -673,9 +651,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       text(c3 + 0.25, tb.y0 + 0.33, "REV", "tb-key fine"); text(c3 + 0.25, tb.y1 - 0.2, "C", "tb-val fine");
 
       // ---- the front view: mn
-      const grid = el("g", { class: "grid-l fine-l" });
-      for (let x = 0; x <= W; x++) el("line", { x1: x, y1: 0, x2: x, y2: 7 }, grid);
-      for (let y = 0; y <= 7; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");             // centre lines: the m, the n, and across
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
       line(-1.9, 0, W + 0.3, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");        // reference lines, named above their left ends
@@ -685,25 +660,12 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
         hdim(a, b, -1.1, label);
       }
       line(W + 0.2, 0, W + 1.0, 0); line(W + 0.2, 6, W + 1.0, 6);                     // height, right of the n
-      vdim(0, 6, W + 0.75, "6 p", "lbl", W + 1.2);
+      vdim(0, 6, W + 0.75, "6", "lbl", W + 1.2);
       line(0, 6.25, 0, 8.65); line(W, 6.25, W, 8.65);                                 // overall width, below
-      hdim(0, W, 8.4, "14 p", "lbl", 8.2);
-      // the holes: a callout from the m's last hole
+      hdim(0, W, 8.4, "14", "lbl", 8.2);
+      // a hole's size, on the m's last hole
       line(7.82, 5.82, 8.5, 6.85); line(8.5, 6.85, 8.95, 6.85);
-      text(9.05, 6.97, `${MN.length}× Ø 0.90 ±0.02 THRU`, "callout");
-      // ... and their position tolerance to datums A and B
-      const fcf = [[9.05, "⌖"], [9.75, "Ø 0.05"], [11.6, "A"], [12.2, "B"]], fy = 7.18, fh = 0.6;
-      el("rect", { x: 9.05, y: fy, width: 3.75, height: fh, class: "frame" });
-      for (const [x, str] of fcf) { if (x > 9.05) line(x, fy, x, fy + fh, "frame"); text(x + (x === 9.05 ? 0.35 : 0.3), fy + 0.43, str, "fcf", x === 9.05 ? { "text-anchor": "middle" } : {}); }
-      // datum A: the base; datum B: the m's left edge
-      const datum = (x, y, tx, ty, letter, vertical) => {
-        el("path", { d: vertical ? `M${x - 0.18},${y} L${x + 0.18},${y} L${x},${y + 0.3} Z` : `M${x},${y - 0.18} L${x},${y + 0.18} L${x - 0.3},${y} Z`, class: "dim-head" });
-        line(vertical ? x : x - 0.3, vertical ? y + 0.3 : y, tx + (vertical ? 0 : 0.5), ty + (vertical ? 0 : 0.3));
-        el("rect", { x: tx - (vertical ? 0.3 : 0), y: ty, width: 0.6, height: 0.6, class: "frame" });
-        text(tx + (vertical ? 0 : 0.3), ty + 0.44, letter, "fcf", { "text-anchor": "middle" });
-      };
-      datum(2.5, 6, 2.5, 6.75, "A", true);
-      datum(0.05, 2.5, -1.5, 2.2, "B", false);
+      text(9.05, 6.97, "Ø 0.9", "callout");
 
 
       // ---- the words, beside the mark
@@ -713,11 +675,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       });
 
       svg.append(sheet);
-      // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark
+      // the mn's 62 holes, drawn as a drawing shows them: an outline
       const holes = svgEl("g", { class: "holes" });
       for (const d of MN) {
         const c = svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole" });
-        holes.append(c, svgEl("path", { d: `M${d.x - 0.2},${d.y}h0.4M${d.x},${d.y - 0.2}v0.4`, class: "cm" }));
+        holes.append(c);
       }
       svg.append(holes);
       const compact = () => host.classList.toggle("compact", host.clientWidth < 640);

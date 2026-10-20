@@ -12,6 +12,7 @@
   --sheet: #FAFAF9;      /* raised: tables, figure frames, menus */
   --ink: #15171A;        /* text, marks, filled buttons */
   --ink-2: #3B3F45;      /* secondary text */
+  --charcoal: #2E2E33;   /* the brand's charcoal: the index's mark and words */
   --muted: #6B7077;      /* labels, dimensions, placeholders */
   --rule: #C6CACE;       /* structural rules */
   --hair: #DFE1E3;       /* row rules */
@@ -119,8 +120,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
 .t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
-.t-mark .aed { fill: var(--ink); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
-.t-mark .hole { fill: var(--ink); stroke: none; }                                 /* the dots: solid, as in the logo */
+.t-mark .aed { fill: var(--charcoal); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
+.t-mark .hole { fill: var(--charcoal); stroke: none; }                                 /* the dots: solid, as in the logo */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
 .t-mark.compact .fine, .t-mark.compact .fine-l { display: none; }
 .intro { margin: 0; font: 700 clamp(1.4rem, 3vw, 2rem)/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); }
@@ -595,50 +596,40 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     });
 
     // the index's large mark: mn as an engineering drawing, pared down: the mark's dots, solid as in the logo (0.9 on a
-    // pitch of 1), with dash-dot centre lines and top and base reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
-    // as the mark, from its top line to its base. On a phone the words go under the mark instead, the widest row exactly as
-    // wide as the mark and the others at its size. Units are dot pitches.
-    const stacked = window.matchMedia ? matchMedia("(max-width: 37.5rem)") : { matches: false };
+    // pitch of 1), with dash-dot centre lines and top and base reference lines; and under it the words (the index's text,
+    // a word to a row), left-aligned, sharing one size, set so the widest row runs exactly the mark's width. Units are dot
+    // pitches.
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      // the words: a word to a row, sized so the first row's ascenders meet the top of the dots and the bottom of the last
-      // row's round letters (its e) their foot, its descenders hanging below (Heros Bold, measured: ascenders 0.734 em
-      // above the baseline, round letters 0.016 below it; rows 1 em apart; the dots run from 0.05 to 5.95); the words'
-      // width is measured in the drawing itself, so the sheet ends just past the widest row
+      // the words: measured in the drawing itself, then sized so the widest is as wide as the mark (W). The rows sit a
+      // little apart: each baseline is the last row's descenders (0.21 em), a gap, then its own ascenders (0.75 em) down
       const words = (document.querySelector(".t-lead .intro")?.textContent || "").trim().split(/\s+/).filter(Boolean);
-      const W = 14, FS = 5.9 / (0.734 + Math.max(words.length - 1, 0) + 0.016), ASC = 0.05 + 0.734 * FS, GAP = 1.3;
-      const under = stacked.matches;                                     // a phone: the words under the mark
-      const TX = under ? 0 : W + 1.8, TY = under ? 6 + GAP : 0;          // where the words' block starts
-      const probe = svgEl("text", { class: "aed", style: `font-size: ${f(FS)}px` });   // inline, over .t-mark text's size
+      const W = 14, GAP = 1.3, PROBE = 2;
+      const probe = svgEl("text", { class: "aed", style: `font-size: ${PROBE}px` });   // inline, over .t-mark text's size
       svg.append(probe);
-      const widths = words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); });
-      const tw = Math.max(0, ...widths);
-      // on a phone, the rows share one size, set so the widest word runs exactly the mark's width, and sit a little
-      // apart: each row's baseline is the last one's descenders (0.21 em), a gap, then its own ascenders (0.75 em) down
-      const rows = words.map((wd) => ({ wd, fs: under && tw ? FS * W / tw : FS }));
-      let by = TY;
-      rows.forEach((r, i) => { by += (i ? 0.21 * rows[i - 1].fs + 0.35 : 0) + 0.75 * r.fs; r.y = under ? by : ASC + i * FS; });
+      const tw = Math.max(0, ...words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); }));
       probe.remove();
-      const O = under ? { x0: -0.5, y0: -0.7, x1: W + 0.5, y1: by + 0.21 * (rows.length ? rows[rows.length - 1].fs : 0) + 0.5 }
-                      : { x0: -2.4, y0: -1.0, x1: TX + tw + 0.6, y1: 7.0 };
-      svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
-      host.style.setProperty("--aspect", ((O.x1 - O.x0 + 0.2) / (O.y1 - O.y0 + 0.2)).toFixed(3));
+      const fs = tw ? PROBE * W / tw : PROBE;
+      let by = 6 + GAP;
+      const rows = words.map((wd, i) => ({ wd, y: (by += (i ? 0.21 * fs + 0.35 : 0) + 0.75 * fs) }));
+      const O = { x0: -0.9, y0: -0.8, x1: W + 0.9, y1: by + 0.21 * fs + 0.5 };
+      svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
+      host.style.setProperty("--aspect", ((O.x1 - O.x0) / (O.y1 - O.y0)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
       const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
-      const text = (x, y, str, cls = "fine", attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: cls, ...attrs }); t.textContent = str; return t; };
 
-      // ---- the front view: mn
-      for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");             // centre lines: the m, the n, and across
+      // ---- the mark's construction: centre lines through the m and the n and across, and its top and base lines
+      for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
-      line(-1.9, 0, W + 0.3, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");        // reference lines, named above their left ends
-      line(-1.9, 6, W + 0.3, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");
+      line(-0.7, 0, W + 0.7, 0, "ref fine-l");
+      line(-0.7, 6, W + 0.7, 6, "ref fine-l");
 
-      // ---- the words, beside the mark
+      // ---- the words, under the mark
       for (const r of rows) {
-        const t = el("text", { x: f(TX), y: f(r.y), class: "aed", style: `font-size: ${f(r.fs)}px` });
+        const t = el("text", { x: 0, y: f(r.y), class: "aed", style: `font-size: ${f(fs)}px` });
         t.textContent = r.wd;
       }
 
@@ -651,7 +642,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       }
       svg.append(holes);
       const compact = () => host.classList.toggle("compact", host.clientWidth < 640);
-      if (!host.dataset.stackWatched && stacked.addEventListener) { host.dataset.stackWatched = "1"; stacked.addEventListener("change", drawBig); }
       compact();
       if (!host.dataset.watched) {
         host.dataset.watched = "1";

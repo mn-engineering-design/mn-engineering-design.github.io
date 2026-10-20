@@ -124,10 +124,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
 .t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
 .t-mark .zone { font-size: 0.3px; }
-.t-mark .grid-l line { stroke: var(--rule); stroke-width: 0.012; }
-.t-mark .tb-name { fill: var(--charcoal); font: 700 0.7px var(--display); letter-spacing: -0.02px; }
-.t-mark .tb-key { font-size: 0.26px; letter-spacing: 0.03px; }
-.t-mark .tb-title { fill: var(--charcoal); font: 600 0.46px var(--mono); letter-spacing: 0.06px; }
+.t-mark .grid-l line { stroke: #CFCDC6; stroke-width: 0.03; }   /* a warm grey on the paper */
+.t-mark .tb-title { fill: var(--charcoal); font: 700 0.62px var(--display); letter-spacing: -0.03em; }   /* as the words: Heros Bold */
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
 .t-mark .dim-head { fill: var(--muted); stroke: none; }
 .t-mark .lbl { fill: var(--ink-2); font: 500 0.52px var(--mono); }
@@ -625,7 +623,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // the index's large mark: mn as an engineering drawing on its own sheet: the mark's dots, solid as in the logo (0.9
     // on a pitch of 1), with faint dash-dot centre lines; its dimensions, each in turn drawn in, held and taken away,
     // round and round: the width in dots across the top, the height in dots down the right, and an arrow to one dot giving
-    // its diameter; a double border round them, with a title block (MODEL NUMBER) in its bottom right corner; and under
+    // its diameter; a double border round them, with a title block ("model number") in its bottom right corner; and under
     // the sheet the words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
     const SLOT = 3.5;                                                  // seconds per dimension: the CSS cycle is 3 slots
     let firstDrawn = 0;
@@ -659,32 +657,32 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const head = (k, x, y, ang) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head dim-mark", style: turn(k), transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
       const label = (k, x, y, str, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl dim-mark", style: turn(k), ...attrs }); t.textContent = str; return t; };
 
-      // ---- the sheet: a double border, and the title block in its bottom right corner (the mark, and its title)
+      // ---- the sheet: a double border, and the title block in its bottom right corner: one box, "model number"
       el("rect", { x: f(S.x0), y: f(S.y0), width: f(S.x1 - S.x0), height: f(S.y1 - S.y0), class: "frame-out" });
       el("rect", { x: f(S.x0 + IN), y: f(S.y0 + IN), width: f(S.x1 - S.x0 - 2 * IN), height: f(S.y1 - S.y0 - 2 * IN), class: "frame" });
       // its zone band: ticks dividing it into 6 zones across, numbered, and A to C down
       const NZ = 6, zw = (S.x1 - S.x0) / NZ, zh = (S.y1 - S.y0) / 3;
-      const zone = (x, y, str) => { const t = el("text", { x: f(x), y: f(y), class: "zone fine", "text-anchor": "middle" }); t.textContent = str; };
+      const zone = (x, y, str) => { const t = el("text", { x: f(x), y: f(y), class: "zone", "text-anchor": "middle" }); t.textContent = str; };
       for (let z = 0; z < NZ; z++) {
         const x = S.x0 + z * zw;
-        if (z) { line(x, S.y0, x, S.y0 + IN, "frame fine-l"); line(x, S.y1 - IN, x, S.y1, "frame fine-l"); }
+        if (z) { line(x, S.y0, x, S.y0 + IN, "frame"); line(x, S.y1 - IN, x, S.y1, "frame"); }
         zone(x + zw / 2, S.y0 + 0.33, String(z + 1)); zone(x + zw / 2, S.y1 - 0.12, String(z + 1));
       }
       for (let z = 0; z < 3; z++) {
         const y = S.y0 + z * zh;
-        if (z) { line(S.x0, y, S.x0 + IN, y, "frame fine-l"); line(S.x1 - IN, y, S.x1, y, "frame fine-l"); }
+        if (z) { line(S.x0, y, S.x0 + IN, y, "frame"); line(S.x1 - IN, y, S.x1, y, "frame"); }
         zone(S.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z]); zone(S.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z]);
       }
-      const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - 7.6; tb.y0 = tb.y1 - 1.15;
-      const tc = tb.x0 + 1.9;
+      const title = el("text", { class: "tb-title" });                  // one box, the words in it, sized to them
+      title.textContent = "model number";
+      const tbw = title.getComputedTextLength ? (svg.append(sheet), title.getComputedTextLength()) : 5;
+      const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - tbw - 0.9; tb.y0 = tb.y1 - 1.05;
       el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame" });
-      line(tc, tb.y0, tc, tb.y1, "frame");
-      const tbt = (x, y, str, cls) => { const t = el("text", { x: f(x), y: f(y), class: cls }); t.textContent = str; };
-      tbt(tb.x0 + 0.35, tb.y1 - 0.33, "mn", "tb-name");
-      tbt(tc + 0.3, tb.y0 + 0.36, "TITLE", "tb-key fine"); tbt(tc + 0.3, tb.y1 - 0.24, "MODEL NUMBER", "tb-title");
+      title.setAttribute("x", f(tb.x0 + 0.45)); title.setAttribute("y", f(tb.y1 - 0.34));
+      sheet.append(title);
 
       // ---- a faint construction grid at the dot pitch, behind the mark
-      const grid = el("g", { class: "grid-l fine-l" });
+      const grid = el("g", { class: "grid-l" });
       for (let x = 0; x <= W; x++) el("line", { x1: x, y1: 0, x2: x, y2: 6 }, grid);
       for (let y = 0; y <= 6; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
 

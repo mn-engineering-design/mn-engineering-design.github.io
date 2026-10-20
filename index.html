@@ -625,7 +625,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // on a pitch of 1), with faint dash-dot centre lines; its dimensions, each in turn drawn in, held and taken away,
     // round and round: the width in dots across the top, the height in dots down the right, and an arrow to one dot giving
     // its diameter; a double border round them, with a title block ("model number") in its bottom right corner; and under
-    // the sheet the words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
+    // the sheet the words (the index's text) on one line, sized to run exactly the sheet's width. Units are dot pitches.
     const SLOT = 3.5;                                                  // seconds per dimension: the CSS cycle is 3 slots
     let firstDrawn = 0;
     function drawBig() {
@@ -644,7 +644,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const tw = line1 ? probe.getComputedTextLength() : 0;
       probe.remove();
       const S = { x0: -3.8, y0: -2.6, x1: W + 3.8, y1: 8.7 }, IN = 0.45;   // the sheet, even either side so the mark sits centred
-      const fs = tw ? PROBE * W / tw : PROBE, wordsY = S.y1 + GAP + 0.734 * fs;
+      const fs = tw ? PROBE * (S.x1 - S.x0) / tw : PROBE, wordsY = S.y1 + GAP + 0.734 * fs;
       const O = { x0: S.x0 - 0.1, y0: S.y0 - 0.1, x1: S.x1 + 0.1, y1: wordsY + 0.21 * fs + 0.3 };
       svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0) / (O.y1 - O.y0)).toFixed(3));
@@ -712,8 +712,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       head(2, ex, ey, Math.atan2(ey - ky, ex - kx) * 180 / Math.PI);
       label(2, kx + 0.6, ky + 0.17, "\u00D8 0.9");
 
-      // ---- the words, under the sheet, one line, as wide as the mark
-      if (line1) { const t = el("text", { x: 0, y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }
+      // ---- the words, under the sheet, one line, as wide as the sheet
+      if (line1) { const t = el("text", { x: f(S.x0), y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }
 
       svg.append(sheet);
       // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1

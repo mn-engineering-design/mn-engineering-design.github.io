@@ -134,7 +134,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .zone { font-size: 0.3px; }
 .t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
 .t-mark .aed { fill: var(--ink); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
-.t-mark .aed-side { fill: color-mix(in srgb, var(--ink) calc(40% + 60% * var(--k)), var(--paper)); }   /* their extrusion, darker to the back */
 .t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.1; }   /* holes: a visible outline, heavier than the dimensions */
 .t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
@@ -145,14 +144,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-lead { display: none; }
 .editing .t-lead { display: grid; }   /* a word a line */
 .t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
-/* the boot: dots print left to right, then the dimensions draw */
-@media (prefers-reduced-motion: no-preference) {
-  .t-mark.boot .dot { animation: dot-in 0.28s ease-out both; animation-delay: calc(var(--i) * 9ms); }
-  .t-mark.boot .dims { animation: dims-in 0.6s ease-out 0.7s both; }
-}
-@keyframes dot-in { from { opacity: 0; transform: scale(0.4); } }
-@keyframes dims-in { from { opacity: 0; } }
-.t-mark .dot { transform-box: fill-box; transform-origin: center; }
 
 /* the model list: a parts list, one row per model, each row going to its sheet */
 @media (max-height: 640px) { .t-sub { display: none; } }
@@ -627,8 +618,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // MODEL NUMBER); a front view with a faint construction grid at the dot pitch, dash-dot centre lines, top and base
     // reference lines, chain and overall dimensions, a callout for the holes and a position tolerance to datums A and B;
     // and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall as the mark,
-    // from its top line to its base, extruded. Units are dot pitches (p).
-    let bigDrawn = false;
+    // from its top line to its base. Units are dot pitches (p).
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
@@ -716,32 +706,20 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       datum(0.05, 2.5, -1.5, 2.2, "B", false);
 
 
-      // ---- the words, beside the mark: each row extruded, copies stepping down and to the right behind it, darker
-      // towards the back, then the face
-      const aed = svgEl("g", { class: "aed-g" });
-      const DEPTH = 14, STEP = 0.016;
+      // ---- the words, beside the mark
       words.forEach((wd, i) => {
-        const y = ASC + i * FS;
-        for (let k = DEPTH; k >= 0; k--) {
-          const t = svgEl("text", { x: f(TX + k * STEP), y: f(y + k * STEP), class: k ? "aed aed-side" : "aed", style: `font-size: ${f(FS)}px` });
-          if (k) t.style.setProperty("--k", (k / DEPTH).toFixed(3));
-          t.textContent = wd;
-          aed.append(t);
-        }
+        const t = el("text", { x: f(TX), y: f(ASC + i * FS), class: "aed", style: `font-size: ${f(FS)}px` });
+        t.textContent = wd;
       });
-      sheet.append(aed);
 
       svg.append(sheet);
       // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark
       const holes = svgEl("g", { class: "holes" });
       for (const d of MN) {
         const c = svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole" });
-        c.style.setProperty("--i", Math.round(d.x * 6 + d.y));
         holes.append(c, svgEl("path", { d: `M${d.x - 0.2},${d.y}h0.4M${d.x},${d.y - 0.2}v0.4`, class: "cm" }));
       }
       svg.append(holes);
-      if (!still && !bigDrawn) host.classList.add("boot"); else host.classList.remove("boot");
-      bigDrawn = true;
       const compact = () => host.classList.toggle("compact", host.clientWidth < 640);
       compact();
       if (!host.dataset.watched) {

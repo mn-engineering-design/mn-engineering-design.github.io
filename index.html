@@ -113,9 +113,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-top { display: grid; gap: clamp(1.25rem, 3.5vh, 2.25rem); align-items: center; min-width: 0; }
 .t-under { display: grid; gap: clamp(1rem, 3vh, 2rem); align-items: start; min-width: 0; }
 .t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
-/* the drawing, with the words beside it on a wide screen; on short screens it narrows to leave room for the projects under
-   it (the sheet is 19.4 x 13.4) */
-.t-mark { justify-self: center; width: min(100%, (100vh - 22rem) * 1.45); width: min(100%, (100svh - 22rem) * 1.45); }
+/* the drawing, with the words beside it on a wide screen, the two centred together; on short screens it narrows to leave
+   room for the projects under it (the sheet is 21.8 x 13.4) */
+.t-mark { justify-self: center; width: min(100%, (100vh - 22rem) * 1.63); width: min(100%, (100svh - 22rem) * 1.63); }
 .t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
@@ -132,12 +132,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .tb-key { font-size: 0.24px; letter-spacing: 0.03px; }
 .t-mark .tb-val { fill: var(--ink-2); font-size: 0.36px; font-weight: 600; }
 .t-mark .tb-title { fill: var(--ink); font-size: 0.42px; letter-spacing: 0.06px; }
+.t-mark .zone { font-size: 0.3px; }
+.t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
+.t-mark .edge { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* the side view's outline */
+.t-mark .hid { stroke: var(--ink-2); stroke-width: 0.025; stroke-dasharray: 0.16 0.08; }   /* hidden lines: short dashes */
+.t-mark .view-tag { fill: var(--ink-2); font-size: 0.34px; font-weight: 600; letter-spacing: 0.05px; }
 .t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* holes: a visible outline, heavier than the dimensions */
 .t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
-.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .tb-key { display: none; }
+.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key, .t-mark.compact .view-tag { display: none; }
 .t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; }
-.intro { margin: 0; width: min-content; font: 400 clamp(2.2rem, 5.6vw, 4.6rem)/1.02 var(--display); letter-spacing: -0.03em; color: var(--ink); }   /* a word a line */
+.intro { margin: 0; width: min-content; font: 700 clamp(2.2rem, 5.2vw, 4.4rem)/1.0 var(--display); letter-spacing: -0.035em; color: var(--ink); }   /* a word a line */
 .t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
 /* the boot: dots print left to right, then the dimensions draw */
 @media (prefers-reduced-motion: no-preference) {
@@ -159,7 +164,12 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .models .type { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
 .models .go { width: 1rem; height: 1rem; color: var(--muted); transition: transform 0.2s ease, color 0.2s ease; }
 .models a:hover .go { transform: translateX(3px); color: var(--ink); }
-@media (min-width: 60rem) { .t-top { grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: clamp(2.5rem, 5vw, 4.5rem); } .t-mark { justify-self: start; } }
+@media (min-width: 60rem) {
+  .t-top { display: flex; justify-content: center; gap: clamp(2.5rem, 5vw, 4.5rem); }
+  .t-mark { flex: none; width: min(60%, (100vh - 22rem) * 1.63); width: min(60%, (100svh - 22rem) * 1.63); }
+  .t-lead { flex: none; }
+}
+@media (max-width: 59.99rem) { .t-lead { justify-items: center; text-align: center; } }
 @media (max-width: 30rem) { .models .type, .models-head span:nth-child(2) { display: none; } .models-head, .models a { grid-template-columns: minmax(0, 1fr) 1rem; } }
 @media (max-height: 640px) { .t-sub { display: none; } .models a { padding: 0.6rem 0; } }
 
@@ -639,15 +649,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     const small = document.querySelector(".mn-small");
     small.setAttribute("viewBox", "0 0 14 6"); dots(small);
 
-    // the index's large mark: mn as an engineering drawing on its own sheet. A double border and a title block (titled
-    // MODEL NUMBER); a faint construction grid at the dot pitch; dash-dot centre lines; top and base reference lines;
-    // chain dimensions for the m and the n, overall dimensions and a callout for the dots. Units are dot pitches (p).
+    // the index's large mark: mn as an engineering drawing on its own sheet. A zoned border and a title block (titled
+    // MODEL NUMBER); a front view with a faint construction grid at the dot pitch, dash-dot centre lines, top and base
+    // reference lines, chain and overall dimensions, a callout for the holes and a position tolerance to datums A and B;
+    // and a side view of the plate, its thickness dimensioned and the holes through it as hidden lines. Units are dot
+    // pitches (p).
     let bigDrawn = false;
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      const W = 14, O = { x0: -2.6, y0: -2.6, x1: 16.6, y1: 10.6 }, IN = 0.45;
+      const W = 14, SX = W + 2.6, T = 1, O = { x0: -2.6, y0: -2.6, x1: SX + T + 1.4, y1: 10.6 }, IN = 0.45;   // SX, T: the side view's left edge, the plate's thickness
       svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
@@ -660,9 +672,22 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
         text(tx, (ya + yb) / 2, label, cls, { "text-anchor": "middle", transform: `rotate(90 ${f(tx)} ${f((ya + yb) / 2)})` });
       };
 
-      // the sheet: a double border
+      // the sheet: border, zone band with 6 zones across and A to C down
       el("rect", { x: O.x0, y: O.y0, width: f(O.x1 - O.x0), height: f(O.y1 - O.y0), class: "frame-out" });
       el("rect", { x: O.x0 + IN, y: O.y0 + IN, width: f(O.x1 - O.x0 - 2 * IN), height: f(O.y1 - O.y0 - 2 * IN), class: "frame" });
+      const NZ = 6, zw = (O.x1 - O.x0) / NZ, zh = (O.y1 - O.y0) / 3;
+      for (let z = 0; z < NZ; z++) {
+        const x = O.x0 + z * zw;
+        if (z) { line(x, O.y0, x, O.y0 + IN, "frame fine-l"); line(x, O.y1 - IN, x, O.y1, "frame fine-l"); }
+        text(x + zw / 2, O.y0 + 0.33, String(z + 1), "zone fine", { "text-anchor": "middle" });
+        text(x + zw / 2, O.y1 - 0.12, String(z + 1), "zone fine", { "text-anchor": "middle" });
+      }
+      for (let z = 0; z < 3; z++) {
+        const y = O.y0 + z * zh;
+        if (z) { line(O.x0, y, O.x0 + IN, y, "frame fine-l"); line(O.x1 - IN, y, O.x1, y, "frame fine-l"); }
+        text(O.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
+        text(O.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
+      }
       // the title block, bottom right: the part, its title, drawing number and revision
       const tb = { x1: O.x1 - IN, y1: O.y1 - IN }; tb.x0 = tb.x1 - 13.2; tb.y0 = tb.y1 - 1.05;
       const c1 = tb.x0 + 2.4, c2 = tb.x0 + 8.4, c3 = tb.x0 + 11.2;
@@ -679,8 +704,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       for (let y = 0; y <= 7; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");             // centre lines: the m, the n, and across
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
-      line(-1.9, 0, W + 0.3, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");        // reference lines, named above their left ends
-      line(-1.9, 6, W + 0.3, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");
+      line(-1.9, 0, SX + T + 0.4, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");   // reference lines, named above their left ends,
+      line(-1.9, 6, SX + T + 0.4, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");   // run across both views
       for (const [a, b, label] of [[0, 8, "8"], [9, 14, "5"]]) {                      // chain dimensions: the m and the n
         line(a, -0.2, a, -1.35); line(b, -0.2, b, -1.35);
         hdim(a, b, -1.1, label);
@@ -692,6 +717,29 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       // the holes: a callout from the m's last hole
       line(7.82, 5.82, 8.5, 6.85); line(8.5, 6.85, 8.95, 6.85);
       text(9.05, 6.97, `${MN.length}× Ø 0.90 ±0.02 THRU`, "callout");
+      // ... and their position tolerance to datums A and B
+      const fcf = [[9.05, "⌖"], [9.75, "Ø 0.05"], [11.6, "A"], [12.2, "B"]], fy = 7.18, fh = 0.6;
+      el("rect", { x: 9.05, y: fy, width: 3.75, height: fh, class: "frame" });
+      for (const [x, str] of fcf) { if (x > 9.05) line(x, fy, x, fy + fh, "frame"); text(x + (x === 9.05 ? 0.35 : 0.3), fy + 0.43, str, "fcf", x === 9.05 ? { "text-anchor": "middle" } : {}); }
+      // datum A: the base; datum B: the m's left edge
+      const datum = (x, y, tx, ty, letter, vertical) => {
+        el("path", { d: vertical ? `M${x - 0.18},${y} L${x + 0.18},${y} L${x},${y + 0.3} Z` : `M${x},${y - 0.18} L${x},${y + 0.18} L${x - 0.3},${y} Z`, class: "dim-head" });
+        line(vertical ? x : x - 0.3, vertical ? y + 0.3 : y, tx + (vertical ? 0 : 0.5), ty + (vertical ? 0 : 0.3));
+        el("rect", { x: tx - (vertical ? 0.3 : 0), y: ty, width: 0.6, height: 0.6, class: "frame" });
+        text(tx + (vertical ? 0 : 0.3), ty + 0.44, letter, "fcf", { "text-anchor": "middle" });
+      };
+      datum(2.5, 6, 2.5, 6.75, "A", true);
+      datum(0.05, 2.5, -1.5, 2.2, "B", false);
+
+      // ---- the side view, to the right: the plate edge-on, a row of holes through it at each dot row
+      el("rect", { x: SX, y: 0, width: T, height: 6, class: "edge" });
+      for (let r = 0; r < 6; r++) {
+        line(SX, r + 0.05, SX + T, r + 0.05, "hid"); line(SX, r + 0.95, SX + T, r + 0.95, "hid");   // the hole's walls, hidden
+        line(SX - 0.35, r + 0.5, SX + T + 0.35, r + 0.5, "cl fine-l");                             // its axis
+      }
+      line(SX, -0.2, SX, -1.35); line(SX + T, -0.2, SX + T, -1.35);                             // the thickness, above
+      hdim(SX, SX + T, -1.1, "1 p");
+      text(SX + T / 2, 6.8, "SIDE", "view-tag", { "text-anchor": "middle" });
 
       svg.append(sheet);
       // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark

@@ -51,7 +51,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 /* ---- title block, top: the mark, the sections, a menu on narrow screens */
 .hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;
        display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); }
-.brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--charcoal); font: 700 1.2rem/1 var(--display); letter-spacing: -0.03em; white-space: nowrap; }   /* the name: charcoal Heros Bold, as the index's words */
+.brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--charcoal); }
+.brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
 .nav a { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding-block: 0.4rem;
          border-bottom: 1.5px solid transparent; }
@@ -120,6 +121,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
 .t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
+.t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
+.t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
+.t-mark .tb-name { fill: var(--charcoal); font: 700 0.7px var(--display); letter-spacing: -0.02px; }
+.t-mark .tb-key { font-size: 0.26px; letter-spacing: 0.03px; }
+.t-mark .tb-title { fill: var(--charcoal); font: 600 0.46px var(--mono); letter-spacing: 0.06px; }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
 .t-mark .dim-head { fill: var(--muted); stroke: none; }
 .t-mark .lbl { fill: var(--ink-2); font: 500 0.52px var(--mono); }
@@ -270,7 +276,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 <!-- ===== title block, top ===== -->
 <header class="hdr">
-  <a class="brand" href="#" aria-label="model number, back to the index">model number</a>
+  <a class="brand" href="#" aria-label="mn, back to the index"><svg class="mn-small" aria-hidden="true"></svg></a>
   <button type="button" class="menu-btn" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span><span></span></button>
   <nav class="nav" id="nav" aria-label="Site">
     <a href="#" data-to="">Index</a>
@@ -610,10 +616,15 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       g.append(c);
     });
 
-    // the index's large mark: mn as an engineering drawing: the mark's dots, solid as in the logo (0.9 on a pitch of 1),
-    // with faint dash-dot centre lines; its dimensions, each in turn drawn in, held and taken away, round and round: the
-    // width in dots across the top, the height in dots down the right, and an arrow to one dot giving its diameter; and
-    // under it the words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
+    // the top bar's small mark: the dot mn
+    const small = document.querySelector(".mn-small");
+    if (small) { small.setAttribute("viewBox", "0 0 14 6"); dots(small); }
+
+    // the index's large mark: mn as an engineering drawing on its own sheet: the mark's dots, solid as in the logo (0.9
+    // on a pitch of 1), with faint dash-dot centre lines; its dimensions, each in turn drawn in, held and taken away,
+    // round and round: the width in dots across the top, the height in dots down the right, and an arrow to one dot giving
+    // its diameter; a double border round them, with a title block (MODEL NUMBER) in its bottom right corner; and under
+    // the sheet the words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
     const SLOT = 3.5;                                                  // seconds per dimension: the CSS cycle is 3 slots
     let firstDrawn = 0;
     function drawBig() {
@@ -631,8 +642,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       svg.append(probe);
       const tw = line1 ? probe.getComputedTextLength() : 0;
       probe.remove();
-      const fs = tw ? PROBE * W / tw : PROBE, wordsY = 6 + GAP + 0.734 * fs;
-      const O = { x0: -3.3, y0: -2.0, x1: W + 3.3, y1: wordsY + 0.21 * fs + 0.3 };   // even either side, so the mark sits centred
+      const S = { x0: -3.7, y0: -2.5, x1: W + 3.7, y1: 8.6 }, IN = 0.3;   // the sheet, even either side so the mark sits centred
+      const fs = tw ? PROBE * W / tw : PROBE, wordsY = S.y1 + GAP + 0.734 * fs;
+      const O = { x0: S.x0 - 0.1, y0: S.y0 - 0.1, x1: S.x1 + 0.1, y1: wordsY + 0.21 * fs + 0.3 };
       svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0) / (O.y1 - O.y0)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
@@ -644,6 +656,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const stroke = (k, part, pts) => el("path", { d: "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L"), pathLength: 1, class: `dim dim-${part}`, style: turn(k) });
       const head = (k, x, y, ang) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head dim-mark", style: turn(k), transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
       const label = (k, x, y, str, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl dim-mark", style: turn(k), ...attrs }); t.textContent = str; return t; };
+
+      // ---- the sheet: a double border, and the title block in its bottom right corner (the mark, and its title)
+      el("rect", { x: f(S.x0), y: f(S.y0), width: f(S.x1 - S.x0), height: f(S.y1 - S.y0), class: "frame-out" });
+      el("rect", { x: f(S.x0 + IN), y: f(S.y0 + IN), width: f(S.x1 - S.x0 - 2 * IN), height: f(S.y1 - S.y0 - 2 * IN), class: "frame" });
+      const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - 7.6; tb.y0 = tb.y1 - 1.15;
+      const tc = tb.x0 + 1.9;
+      el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame" });
+      line(tc, tb.y0, tc, tb.y1, "frame");
+      const tbt = (x, y, str, cls) => { const t = el("text", { x: f(x), y: f(y), class: cls }); t.textContent = str; };
+      tbt(tb.x0 + 0.35, tb.y1 - 0.33, "mn", "tb-name");
+      tbt(tc + 0.3, tb.y0 + 0.36, "TITLE", "tb-key fine"); tbt(tc + 0.3, tb.y1 - 0.24, "MODEL NUMBER", "tb-title");
 
       // ---- the mark's centre lines: the m, the n, and across
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
@@ -665,7 +688,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       head(2, ex, ey, 45);
       label(2, -1.6, -0.78, "\u00D8 0.9", { "text-anchor": "end" });
 
-      // ---- the words, under the mark, one line
+      // ---- the words, under the sheet, one line, as wide as the mark
       if (line1) { const t = el("text", { x: 0, y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }
 
       svg.append(sheet);

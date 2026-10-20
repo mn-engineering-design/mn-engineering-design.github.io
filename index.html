@@ -114,7 +114,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
 /* the drawing fills the sheet, centred: as wide as the page, or as the height allows (--aspect: the drawing's width over
    its height, set by the script, since the words' width decides it) */
-.t-mark { justify-self: center; width: min(100%, (100vh - 12rem) * var(--aspect, 2.5)); width: min(100%, (100svh - 12rem) * var(--aspect, 2.5)); }
+.t-mark { justify-self: center; width: min(100%, (100vh - 10rem) * var(--aspect, 2.5)); width: min(100%, (100svh - 10rem) * var(--aspect, 2.5)); }
 .t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
@@ -123,14 +123,18 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
 .t-mark .dim-head { fill: var(--muted); stroke: none; }
 .t-mark .lbl { fill: var(--ink-2); font: 500 0.52px var(--mono); }
-/* the dimensions draw themselves in when the page opens: lines from their start, then arrowheads and numbers; --el
-   is how far in a redraw starts. Under reduced motion they're simply there */
+/* the dimensions, each in turn, round and round (a 10.5 s cycle, a 3.5 s slot each, --d its start): extension lines
+   draw out, then the dimension line, then arrowheads and number appear; hold; all fade; the next one starts. --el is how
+   far in a redraw starts. Under reduced motion all three are simply there */
 @media (prefers-reduced-motion: no-preference) {
-  .t-mark .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-in var(--dur) ease-in-out calc(var(--d) - var(--el, 0s)) both; }
-  .t-mark .show { animation: show-in 0.35s ease-out calc(var(--d) - var(--el, 0s)) both; }
+  .t-mark .dim-ext, .t-mark .dim-line { stroke-dasharray: 1; }
+  .t-mark .dim-ext { animation: dim-ext 10.5s linear calc(var(--d) - var(--el, 0s)) infinite both; }
+  .t-mark .dim-line { animation: dim-line 10.5s linear calc(var(--d) - var(--el, 0s)) infinite both; }
+  .t-mark .dim-mark { animation: dim-mark 10.5s linear calc(var(--d) - var(--el, 0s)) infinite both; }
 }
-@keyframes draw-in { to { stroke-dashoffset: 0; } }
-@keyframes show-in { from { opacity: 0; } }
+@keyframes dim-ext { 0% { stroke-dashoffset: 1; opacity: 1; } 3% { stroke-dashoffset: 0; } 27% { opacity: 1; } 31%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes dim-line { 0%, 3% { stroke-dashoffset: 1; opacity: 1; } 10% { stroke-dashoffset: 0; } 27% { opacity: 1; } 31%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes dim-mark { 0%, 10% { opacity: 0; } 13%, 27% { opacity: 1; } 31%, 100% { opacity: 0; } }
 .t-mark .aed { fill: var(--charcoal); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
 .t-mark .hole { fill: var(--charcoal); stroke: none; }                                 /* the dots: solid, as in the logo */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
@@ -607,15 +611,16 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     });
 
     // the index's large mark: mn as an engineering drawing: the mark's dots, solid as in the logo (0.9 on a pitch of 1),
-    // with faint dash-dot centre lines; its dimensions, drawn in one after another when the page opens: the width in dots
-    // across the top, the height in dots down the right, and an arrow to one dot giving its diameter; and under it the
-    // words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
+    // with faint dash-dot centre lines; its dimensions, each in turn drawn in, held and taken away, round and round: the
+    // width in dots across the top, the height in dots down the right, and an arrow to one dot giving its diameter; and
+    // under it the words (the index's text) on one line, sized to run exactly the mark's width. Units are dot pitches.
+    const SLOT = 3.5;                                                  // seconds per dimension: the CSS cycle is 3 slots
     let firstDrawn = 0;
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      // a redraw (the fonts arriving, your text arriving) carries on the dimensions' drawing-in where it had got to
+      // a redraw (the fonts arriving, your text arriving) carries on the dimensions' cycle where it had got to
       if (!firstDrawn) firstDrawn = performance.now();
       host.style.setProperty("--el", ((performance.now() - firstDrawn) / 1000).toFixed(2) + "s");
       // the words on one line, measured in the drawing itself, then sized to the mark's width (W)
@@ -627,36 +632,38 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const tw = line1 ? probe.getComputedTextLength() : 0;
       probe.remove();
       const fs = tw ? PROBE * W / tw : PROBE, wordsY = 6 + GAP + 0.734 * fs;
-      const O = { x0: -4.0, y0: -2.2, x1: W + 4.0, y1: wordsY + 0.21 * fs + 0.4 };   // even either side, so the mark sits centred
+      const O = { x0: -3.3, y0: -2.0, x1: W + 3.3, y1: wordsY + 0.21 * fs + 0.3 };   // even either side, so the mark sits centred
       svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
       host.style.setProperty("--aspect", ((O.x1 - O.x0) / (O.y1 - O.y0)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
       const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
-      // drawn in: a line that draws itself from its start over `dur`, from `d` seconds; a mark that fades in at `d`
-      const stroke = (d, dur, pts) => el("path", { d: "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L"), pathLength: 1, class: "dim draw", style: `--d: ${d}s; --dur: ${dur}s` });
-      const head = (x, y, ang, d) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head show", style: `--d: ${d}s`, transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
-      const label = (x, y, str, d, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl show", style: `--d: ${d}s`, ...attrs }); t.textContent = str; return t; };
+      // each dimension (k: 0, 1, 2) has its slot of the cycle: its extension lines draw out, then its dimension line,
+      // then its arrowheads and number appear; all hold, then fade (the timings are the CSS keyframes, dim-*)
+      const turn = (k) => `--d: ${k * SLOT}s`;
+      const stroke = (k, part, pts) => el("path", { d: "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L"), pathLength: 1, class: `dim dim-${part}`, style: turn(k) });
+      const head = (k, x, y, ang) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head dim-mark", style: turn(k), transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
+      const label = (k, x, y, str, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl dim-mark", style: turn(k), ...attrs }); t.textContent = str; return t; };
 
       // ---- the mark's centre lines: the m, the n, and across
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
 
       // ---- 1. the width, across the top: 14 dots
-      stroke(0.3, 0.3, [[0, -0.25], [0, -1.5]]); stroke(0.3, 0.3, [[W, -0.25], [W, -1.5]]);
-      stroke(0.6, 0.7, [[0, -1.2], [W, -1.2]]);
-      head(0, -1.2, 180, 1.2); head(W, -1.2, 0, 1.2);
-      label(W / 2, -1.45, String(W), 1.3, { "text-anchor": "middle" });
+      stroke(0, "ext", [[0, -0.25], [0, -1.5]]); stroke(0, "ext", [[W, -0.25], [W, -1.5]]);
+      stroke(0, "line", [[0, -1.2], [W, -1.2]]);
+      head(0, 0, -1.2, 180); head(0, W, -1.2, 0);
+      label(0, W / 2, -1.45, String(W), { "text-anchor": "middle" });
       // ---- 2. the height, down the right of the n: 6 dots
-      stroke(1.7, 0.3, [[W + 0.25, 0], [W + 1.5, 0]]); stroke(1.7, 0.3, [[W + 0.25, 6], [W + 1.5, 6]]);
-      stroke(2.0, 0.6, [[W + 1.2, 0], [W + 1.2, 6]]);
-      head(W + 1.2, 0, -90, 2.5); head(W + 1.2, 6, 90, 2.5);
-      label(W + 1.5, 3.22, "6", 2.6);
+      stroke(1, "ext", [[W + 0.25, 0], [W + 1.5, 0]]); stroke(1, "ext", [[W + 0.25, 6], [W + 1.5, 6]]);
+      stroke(1, "line", [[W + 1.2, 0], [W + 1.2, 6]]);
+      head(1, W + 1.2, 0, -90); head(1, W + 1.2, 6, 90);
+      label(1, W + 1.5, 3.2, "6");
       // ---- 3. one dot's diameter: an arrow in from the upper left to the m's first dot
       const ex = 0.5 - 0.45 * Math.SQRT1_2, ey = 0.5 - 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
-      stroke(3.0, 0.5, [[-1.9, -0.95], [-1.0, -0.95], [ex, ey]]);
-      head(ex, ey, 45, 3.45);
-      label(-2.0, -0.78, "\u00D8 0.9", 3.5, { "text-anchor": "end" });
+      stroke(2, "line", [[-1.5, -0.95], [-0.9, -0.95], [ex, ey]]);
+      head(2, ex, ey, 45);
+      label(2, -1.6, -0.78, "\u00D8 0.9", { "text-anchor": "end" });
 
       // ---- the words, under the mark, one line
       if (line1) { const t = el("text", { x: 0, y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }

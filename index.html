@@ -46,7 +46,7 @@ a { color: inherit; }
 a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .label { font: 500 0.68rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .wrap { width: 100%; max-width: 74rem; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 3rem); box-sizing: border-box; }
-@media (min-width: 48rem) { .deck .wrap { padding-right: max(3.5rem, 4vw); } }   /* clear of the sheet index at the side */
+@media (min-width: 48rem) { .deck .wrap { padding-right: max(3.5rem, 4vw); } .deck .t-grid { padding-left: max(3.5rem, 4vw); } }   /* clear of the sheet index at the side; the index, evenly, so it centres on the page */
 
 /* ---- title block, top: the mark, the sections, a menu on narrow screens */
 .hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;

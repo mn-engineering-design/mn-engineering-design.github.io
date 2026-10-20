@@ -1,0 +1,976 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>mn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a drawing set. A title-block header and footer stay put; between them one sheet shows at a time (the index,
+   one datasheet per model, products, contact), and a model's details open as a document over the sheet.
+   One look in every theme: drafting-film grey, ink, hairline rules, a single blue for the current position. */
+:root {
+  --paper: #F1F2F1;      /* the sheet */
+  --sheet: #FAFAF9;      /* raised: tables, figure frames, menus */
+  --ink: #15171A;        /* text, marks, filled buttons */
+  --ink-2: #3B3F45;      /* secondary text */
+  --muted: #6B7077;      /* labels, dimensions, placeholders */
+  --rule: #C6CACE;       /* structural rules */
+  --hair: #DFE1E3;       /* row rules */
+  --accent: #1F5AA6;     /* where you are, and focus */
+  /* the edit bar's save states */
+  --purple: #5C53A2; --green: #20A76B; --amber: #F4B73E; --red: #BC3843;
+
+  --display: "Heros", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --body: "Heros", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --cn: "Heros Cn", "Helvetica Neue", "Arial Narrow", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --hdr: 3.25rem;        /* title block, top */
+  --ftr: 2.5rem;         /* title block, bottom */
+  --top: env(safe-area-inset-top, 0px);
+  --bot: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+
+@font-face { font-family: "Heros"; src: url("fonts/texgyreheros-regular.otf") format("opentype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Heros"; src: url("fonts/texgyreheros-bold.otf") format("opentype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Heros Cn"; src: url("fonts/texgyreheroscn-bold.otf") format("opentype"); font-weight: 700; font-display: swap; }
+
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; overscroll-behavior: none; background: var(--paper); color: var(--ink); font: 400 1rem/1.55 var(--body);
+       -webkit-font-smoothing: antialiased; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.08; letter-spacing: -0.015em; text-wrap: balance; margin: 0; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.label { font: 500 0.68rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.wrap { width: 100%; max-width: 74rem; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 3rem); box-sizing: border-box; }
+@media (min-width: 48rem) { .deck .wrap { padding-right: max(3.5rem, 4vw); } }   /* clear of the sheet index at the side */
+
+/* ---- title block, top: the mark, the sections, a menu on narrow screens */
+.hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;
+       display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); }
+.brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
+.nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
+.nav a { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding-block: 0.4rem;
+         border-bottom: 1.5px solid transparent; }
+.nav a:hover { color: var(--ink); border-bottom-color: var(--rule); }
+.nav a[aria-current] { color: var(--ink); border-bottom-color: var(--ink); }
+.menu-btn { display: none; margin-left: auto; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--sheet);
+            color: var(--ink); cursor: pointer; align-content: center; justify-items: center; gap: 4px; }
+.menu-btn span { display: block; width: 1rem; height: 1.5px; background: currentColor; transition: transform 0.25s ease, opacity 0.2s ease; }
+.menu-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.menu-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
+@media (max-width: 52rem) {
+  .nav { position: fixed; top: calc(var(--hdr) + var(--top) - 1px); right: clamp(1rem, 3vw, 2rem); z-index: 7; flex-direction: column; align-items: stretch; gap: 0;
+         min-width: 13rem; padding: 0.35rem 0; background: var(--sheet); border: 1px solid var(--rule); box-shadow: 0 12px 32px rgba(21, 23, 26, 0.12); }
+  .nav:not(.open) { display: none; }
+  .nav a { padding: 0.8rem 1rem; border-bottom: 0; border-left: 2px solid transparent; }
+  .nav a[aria-current] { border-left-color: var(--accent); }
+  .menu-btn { display: grid; }
+}
+
+/* ---- title block, bottom: which sheet, of how many, and a step either way */
+.ftr { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; box-sizing: border-box; height: calc(var(--ftr) + var(--bot)); padding-bottom: var(--bot);
+       display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; background: var(--paper); border-top: 1px solid var(--rule);
+       font: 500 0.68rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ftr > * { display: flex; align-items: center; gap: 0.6rem; min-width: 0; padding-inline: clamp(0.75rem, 2vw, 1.25rem); border-right: 1px solid var(--rule); }
+.ftr > :last-child { border-right: 0; }
+.ftr .f-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: var(--ftr); }
+.ftr button { border: 0; background: none; color: var(--ink); cursor: pointer; justify-content: center; width: var(--ftr); padding: 0; }
+.ftr button:disabled { color: var(--rule); cursor: default; }
+.ftr button:not(:disabled):hover { background: var(--sheet); }
+.ftr button svg { width: 0.9rem; height: 0.9rem; }
+
+/* ---- the sheets: one at a time between the title blocks; a step slides the whole sheet up and the next in after it */
+.deck { position: fixed; left: 0; right: 0; top: calc(var(--hdr) + var(--top)); bottom: calc(var(--ftr) + var(--bot)); overflow: clip; touch-action: none; }
+.editing .deck { touch-action: auto; }
+.slide { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; overflow: clip;
+         padding-block: clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
+.slide.shown { visibility: visible; }
+.slide.anim { transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
+
+/* the sheet index at the right edge: a scale with a tick per sheet */
+.index-scale { position: fixed; z-index: 5; right: clamp(0.5rem, 1.5vw, 1.25rem); top: calc(50% + (var(--hdr) - var(--ftr)) / 2); transform: translateY(-50%);
+               display: grid; border-left: 1px solid var(--rule); }
+.index-scale button { display: flex; align-items: center; gap: 0.45rem; height: 1.6rem; padding: 0 0 0 0; border: 0; background: none; cursor: pointer;
+                      font: 500 0.6rem/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.index-scale button::before { content: ""; width: 0.5rem; height: 1px; background: var(--rule); transition: width 0.25s ease, background 0.25s ease; }
+.index-scale button:hover { color: var(--ink); }
+.index-scale button[aria-current] { color: var(--accent); }
+.index-scale button[aria-current]::before { width: 0.95rem; height: 2px; background: var(--accent); }
+@media (max-width: 48rem) { .index-scale { display: none; } }
+.reading .index-scale { visibility: hidden; }
+.inv-on .index-scale { --rule: #4A4F56; --muted: #8E949B; }
+
+/* ---- the marks: a model's name in Heros Cn Bold with the dot mn after it; mn alone on the index */
+.mark { display: block; width: auto; fill: currentColor; overflow: visible; }
+
+/* ---- sheet 00: the index */
+.t-grid { display: grid; gap: clamp(1rem, 3.5vh, 2.25rem); max-width: none; }          /* the index runs the full width of the page */
+.t-under { display: grid; gap: clamp(1rem, 3vh, 2rem); align-items: start; min-width: 0; }
+.t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
+/* the drawing spans the page; on short screens it narrows to leave room for the projects under it (the sheet is 33.4 x 13.4) */
+.t-mark { justify-self: center; width: min(100%, (100vh - 24rem) * 2.49); width: min(100%, (100svh - 24rem) * 2.49); }
+.t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
+.t-mark .dot, .t-mark .word { fill: var(--ink); }
+.t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
+.t-mark .dim-head { fill: var(--muted); stroke: none; }
+.t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
+.t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
+.t-mark .grid-l line { stroke: var(--rule); stroke-width: 0.012; }
+.t-mark .cl { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.8 0.16 0.1 0.16; }   /* centre lines: dash-dot */
+.t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
+.t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
+.t-mark .lbl { fill: var(--ink-2); font-size: 0.46px; }
+.t-mark .callout { fill: var(--ink-2); font-size: 0.4px; }
+.t-mark .zone { font-size: 0.3px; }
+.t-mark .tb-name { fill: var(--ink); font: 700 0.62px var(--display); letter-spacing: -0.01px; }
+.t-mark .tb-key { font-size: 0.24px; letter-spacing: 0.03px; }
+.t-mark .tb-val { fill: var(--ink-2); font-size: 0.36px; font-weight: 600; }
+.t-mark .tb-title { fill: var(--ink); font-size: 0.42px; letter-spacing: 0.06px; }
+.t-mark .detail-tag { fill: var(--ink-2); font-size: 0.4px; font-weight: 600; letter-spacing: 0.04px; }
+.t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* holes: a visible outline, heavier than the dimensions */
+.t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
+.t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
+/* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
+.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key { display: none; }
+.t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; } .t-mark.compact .detail-tag { font-size: 0.6px; }
+.intro { margin: 0; max-width: 24ch; font: 400 clamp(1.4rem, 3.4vw, 2.3rem)/1.15 var(--display); letter-spacing: -0.02em; color: var(--ink); }
+.t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
+/* the boot: dots print left to right, then the dimensions draw */
+@media (prefers-reduced-motion: no-preference) {
+  .t-mark.boot .dot { animation: dot-in 0.28s ease-out both; animation-delay: calc(var(--i) * 9ms); }
+  .t-mark.boot .dims { animation: dims-in 0.6s ease-out 0.7s both; }
+}
+@keyframes dot-in { from { opacity: 0; transform: scale(0.4); } }
+@keyframes dims-in { from { opacity: 0; } }
+.t-mark .dot { transform-box: fill-box; transform-origin: center; }
+
+/* the model list: a parts list, one row per model, each row going to its sheet */
+.models { width: 100%; min-width: 0; border-top: 1.5px solid var(--ink); }
+.models-head, .models a { display: grid; grid-template-columns: minmax(0, 1fr) auto 1rem; align-items: center; gap: 1rem; }
+.models-head { padding: 0.55rem 0; border-bottom: 1px solid var(--rule); }
+.models ol { list-style: none; margin: 0; padding: 0; }
+.models a { padding: 0.8rem 0; border-bottom: 1px solid var(--hair); text-decoration: none; color: var(--ink); }
+.models a:hover { background: linear-gradient(90deg, var(--sheet), transparent); }
+.models .mark { height: 1.35rem; }
+.models .type { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.models .go { width: 1rem; height: 1rem; color: var(--muted); transition: transform 0.2s ease, color 0.2s ease; }
+.models a:hover .go { transform: translateX(3px); color: var(--ink); }
+@media (min-width: 60rem) { .t-under { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(2.5rem, 6vw, 5rem); } }
+@media (max-width: 30rem) { .models .type, .models-head span:nth-child(2) { display: none; } .models-head, .models a { grid-template-columns: minmax(0, 1fr) 1rem; } }
+@media (max-height: 640px) { .t-sub { display: none; } .models a { padding: 0.6rem 0; } }
+
+/* ---- a model's datasheet: what it is and its specification, beside a figure of it working */
+.p-body { display: grid; gap: clamp(1.25rem, 4vh, 2.5rem); align-items: center; }
+.p-text { display: grid; gap: clamp(0.7rem, 2vh, 1.1rem); justify-items: start; align-content: start; min-width: 0; }
+.eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; }
+.p-mark .mark { height: clamp(2.6rem, 7vw, 4.4rem); }
+.tagline { margin: 0; max-width: 46ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.5vw, 1.08rem); line-height: 1.5; }
+.spec { margin: 0; width: 100%; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 1.5rem; border-top: 1.5px solid var(--ink); font-size: 0.9rem; }
+.spec dt, .spec dd { margin: 0; padding: 0.5rem 0; border-bottom: 1px solid var(--hair); }
+.spec dt { font: 500 0.66rem/1.9 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.spec dd { color: var(--ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.7rem 1rem; border: 1px solid var(--ink); border-radius: 2px; background: transparent; color: var(--ink);
+       text-decoration: none; font: 700 0.85rem/1 var(--body); white-space: nowrap; transition: background 0.15s ease, color 0.15s ease; }
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn-fill { background: var(--ink); color: var(--paper); }
+.btn-fill:hover { background: var(--ink-2); }
+.btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+.btn .repo { font: 500 0.72rem/1 var(--mono); opacity: 0.7; }
+@media (min-width: 60rem) { .p-body { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2.5rem, 5vw, 4.5rem); } }
+@media (max-width: 40rem) {
+  .spec { font-size: 0.8rem; } .spec dt, .spec dd { padding: 0.32rem 0; } .spec dt { font-size: 0.6rem; }
+  .tagline { font-size: 0.92rem; line-height: 1.42; }
+  .btn { padding: 0.6rem 0.8rem; } .btn .repo { display: none; }
+  .demo figcaption .ct { display: none; }
+}
+@media (max-height: 700px) and (max-width: 40rem) { .spec .opt { display: none; } }
+@media (max-height: 600px) and (max-width: 40rem) { .p-text .spec { display: none; } }
+
+/* the figure: the sample run in a plain frame, with a figure number and its caption */
+.demo { margin: 0; display: grid; gap: 0.55rem; min-width: 0; }
+.demo-frame { position: relative; aspect-ratio: 560 / 380; max-width: 100%; overflow: hidden; background: var(--sheet); outline: 1px solid var(--rule); outline-offset: 0; }
+.demo-frame.video { background: #FDFDFD; }
+.demo-frame video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.demo figcaption { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font: 500 0.68rem/1.35 var(--mono); color: var(--ink-2); }
+.demo figcaption b { font-weight: 600; color: var(--ink); margin-right: 0.5rem; }
+.demo-toggle { flex: none; font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: none;
+               border: 1px solid var(--rule); border-radius: 2px; padding: 0.4rem 0.6rem; cursor: pointer; }
+.demo-toggle:hover { border-color: var(--ink); }
+.demo-pending { position: relative; aspect-ratio: 560 / 380; max-width: 100%; box-sizing: border-box; display: grid; place-items: center; border: 1px dashed var(--rule);
+                background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--hair) 50%, transparent calc(50% + 0.5px)),
+                            linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--hair) 50%, transparent calc(50% + 0.5px)), var(--sheet); }
+.demo-pending span { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--sheet); padding: 0.45rem 0.6rem; border: 1px solid var(--hair); }
+
+/* ---- products: a catalogue table */
+.cat-head { display: grid; gap: 0.6rem; justify-items: start; margin-bottom: clamp(1rem, 3vh, 2rem); }
+.cat-head h2, .c-big { font-size: clamp(2rem, 5vw, 3.4rem); }
+.catalogue { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.catalogue th { text-align: left; font: 500 0.64rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 1rem 0.55rem 0;
+                border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.catalogue td { padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+.catalogue .mark { height: 1.3rem; }
+.catalogue .price { font: 500 0.85rem/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.catalogue .free { display: block; margin-top: 0.35rem; font: 500 0.7rem/1.3 var(--mono); color: var(--ink-2); text-underline-offset: 2px; }
+.catalogue td:last-child, .catalogue th:last-child { padding-right: 0; text-align: right; }
+.catalogue .btn { padding: 0.55rem 0.8rem; font-size: 0.8rem; }
+.catalogue .blank-name { color: var(--muted); }
+.ph { color: var(--muted); }                                     /* placeholder text, until the real text is written */
+@media (max-width: 40rem) { .catalogue .c-desc { display: none; } }
+
+/* ---- contact: the one inverted sheet */
+.slide.inv { background: var(--ink); color: var(--paper); --rule: #4A4F56; --hair: #33373D; --muted: #9AA0A6; --ink-2: #C9CDD1; }
+.slide.inv .btn { border-color: var(--paper); color: var(--paper); }
+.slide.inv .btn-fill { background: var(--paper); color: var(--ink); }
+.slide.inv .btn-fill:hover { background: #D9DCDF; }
+.slide.inv :focus-visible { outline-color: var(--paper); }
+.c-body { display: grid; gap: clamp(1rem, 3vh, 1.6rem); justify-items: start; max-width: 46rem; }
+.c-body .tagline { color: var(--ink-2); font-size: clamp(1rem, 1.8vw, 1.2rem); }
+
+/* ---- a model's details: a document that slides up over the sheet and scrolls on its own */
+.detail { position: fixed; z-index: 4; left: 0; right: 0; top: calc(var(--hdr) + var(--top)); bottom: calc(var(--ftr) + var(--bot)); overflow-y: auto; overscroll-behavior: contain;
+          background: var(--paper); transform: translateY(100%); visibility: hidden; transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0.6s; }
+.detail.open { transform: none; visibility: visible; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .detail, .detail.open, .slide.anim, .menu-btn span { transition: none; } }
+.d-wrap { max-width: 46rem; margin: 0 auto; padding-inline: clamp(1rem, 4vw, 1.5rem); box-sizing: border-box; }
+.d-head { padding-block: clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 5vw, 2.5rem); border-bottom: 1px solid var(--rule); }
+.d-head .d-wrap { display: grid; gap: 1rem; justify-items: start; }
+.d-back { font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; }
+.d-back:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.d-head .p-mark { margin-top: 0.75rem; }
+.d-head .tagline { font-size: clamp(1.05rem, 2.2vw, 1.25rem); max-width: 40ch; color: var(--ink); }
+.d-title { margin-top: 0.75rem; font-size: clamp(2.2rem, 7vw, 3.4rem); }
+.d-body { padding-block: clamp(1.75rem, 5vw, 3rem) 4rem; }
+.d-lede { margin: 0; font: 400 clamp(1.1rem, 2.2vw, 1.3rem)/1.55 var(--body); }
+.d-sec { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); column-gap: 1rem; row-gap: 0.85rem; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1.5px solid var(--ink); }
+.d-sec > * { grid-column: 2; }
+.d-num { grid-column: 1; grid-row: 1; font: 600 0.8rem/1.9 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.d-sec h2 { font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
+.d-sec p { margin: 0; max-width: 62ch; }
+.d-fig { margin: 0.5rem 0 0; display: grid; gap: 0.5rem; }
+.d-fig .demo-pending { aspect-ratio: 16 / 9; }
+.d-fig figcaption { font: 500 0.68rem/1.4 var(--mono); color: var(--muted); }
+.d-fig figcaption b { color: var(--ink); font-weight: 600; margin-right: 0.5rem; }
+.d-photo { width: min(100%, 14rem); aspect-ratio: 4 / 5; margin-bottom: 2rem; }
+.d-links { margin: 2.5rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--rule); font: 500 0.8rem/1.4 var(--mono); }
+.d-end { display: inline-block; margin-top: 3rem; }
+@media (max-width: 30rem) { .d-sec { grid-template-columns: minmax(0, 1fr); } .d-sec > *, .d-num { grid-column: 1; grid-row: auto; } }
+
+/* ---- your text */
+[data-slot] { white-space: pre-wrap; overflow-wrap: anywhere; }
+.editing [data-slot] { outline: 1px dashed var(--accent); outline-offset: 4px; cursor: text; }
+.editing [data-slot]:focus { background: rgba(31, 90, 166, 0.06); outline-style: solid; }
+.editing [data-slot].empty::before { content: attr(data-hint); color: var(--muted); font-style: italic; pointer-events: none; }
+.editbar { position: fixed; z-index: 8; left: 0; right: 0; bottom: calc(var(--ftr) + var(--bot) + 0.75rem); display: flex; justify-content: center; pointer-events: none; padding-inline: 1rem; }
+.editbar .inner { pointer-events: auto; display: flex; align-items: center; gap: 0.75rem; max-width: 100%; background: var(--ink); color: var(--paper);
+                  padding: 0.35rem 0.35rem 0.35rem 0.9rem; border-radius: 2px; box-shadow: 0 10px 28px rgba(21, 23, 26, 0.25); }
+.editbar .status { font: 500 0.72rem/1.3 var(--mono); min-width: 0; display: flex; align-items: center; gap: 0.5rem; }
+.editbar .status::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; background: var(--muted); }
+.editbar[data-state="unsaved"] .status::before, .editbar[data-state="saving"] .status::before { background: var(--amber); }
+.editbar[data-state="saved"] .status::before { background: var(--green); }
+.editbar[data-state="error"] .status::before { background: var(--red); }
+.editbar button { border: 0; border-radius: 2px; padding: 0.55rem 0.9rem; font: 700 0.85rem/1 var(--body); cursor: pointer; background: var(--paper); color: var(--ink); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-gh" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></symbol>
+</svg>
+
+<!-- ===== title block, top ===== -->
+<header class="hdr">
+  <a class="brand" href="#" aria-label="mn, back to the index"><svg class="mn-small" aria-hidden="true"></svg></a>
+  <button type="button" class="menu-btn" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span><span></span></button>
+  <nav class="nav" id="nav" aria-label="Site">
+    <a href="#" data-to="">Index</a>
+    <a href="#flowmn" data-to="flowmn">Projects</a>
+    <a href="#products" data-to="products">Products</a>
+    <a href="#contact" data-to="contact">Contact</a>
+    <a href="#about" data-to="about">About</a>
+    <a href="https://github.com/SPC3MN" target="_blank" rel="noopener">GitHub &nearr;</a>
+  </nav>
+</header>
+
+<!-- ===== the sheets ===== -->
+<main class="deck">
+  <!-- 00: the index -->
+  <section class="slide" data-id="" data-name="Index" aria-labelledby="name-mn">
+    <div class="wrap t-grid">
+      <h1 class="sr-only" id="name-mn">mn &middot; model number</h1>
+      <div class="t-mark"><svg class="mn-big" aria-hidden="true"></svg></div>
+      <div class="t-under">
+      <div class="t-lead">
+        <p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p>
+        <p class="t-sub" data-slot="site.tagline" data-hint="A line under it, if you want one"></p>
+      </div>
+      <div class="models" role="navigation" aria-label="Projects">
+        <div class="models-head label"><span>Project</span><span>Type</span><span></span></div>
+        <ol>
+          <li><a href="#flowmn"><span class="mark-hold" data-word="flow"><span class="sr-only">flowmn</span></span><span class="type">Desktop app</span><svg class="go" aria-hidden="true"><use href="#i-right"/></svg></a></li>
+          <li><a href="#tankmn"><span class="mark-hold" data-word="tank"><span class="sr-only">tankmn</span></span><span class="type">Lab facility</span><svg class="go" aria-hidden="true"><use href="#i-right"/></svg></a></li>
+        </ol>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- flowmn -->
+  <section class="slide" data-id="flowmn" data-name="flowmn &middot; Desktop app" aria-labelledby="name-flowmn">
+    <div class="wrap p-body">
+      <div class="p-text">
+        <div class="eyebrow"><span class="label">Desktop app</span></div>
+        <h2 class="p-mark" id="name-flowmn"><span class="mark-hold" data-word="flow"><span class="sr-only">flowmn</span></span></h2>
+        <p class="tagline" data-slot="projects.pivmn.summary" data-hint="One line on what flowmn does"></p>
+        <dl class="spec">
+          <dt>Input</dt><dd>DaVis .set &middot; .im7, TIFF or PNG pairs</dd>
+          <dt>Modes</dt><dd>Planar &middot; stereo</dd>
+          <dt class="opt">Calibration</dt><dd class="opt">Read from the project&rsquo;s Calibration.xml</dd>
+          <dt>Compute</dt><dd>CPU &middot; NVIDIA GPU (CUDA)</dd>
+        </dl>
+        <div class="actions">
+          <a class="btn" href="#flowmn-details">Details<span class="sr-only"> of flowmn</span> &rarr;</a>
+        </div>
+      </div>
+      <figure class="demo">
+        <div class="demo-pending"><span>Fig. 1 &middot; pending</span></div>
+        <figcaption><span><b>Fig. 1</b><span class="ct">Sample run, to follow</span></span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- tankmn -->
+  <section class="slide" data-id="tankmn" data-name="tankmn &middot; Lab facility" aria-labelledby="name-tankmn">
+    <div class="wrap p-body">
+      <div class="p-text">
+        <div class="eyebrow"><span class="label">Lab facility</span></div>
+        <h2 class="p-mark" id="name-tankmn"><span class="mark-hold" data-word="tank"><span class="sr-only">tankmn</span></span></h2>
+        <p class="tagline" data-slot="projects.tankmn.summary" data-hint="One line on what tankmn is">A turbulence tank: four corner arrays of 24 pumps, 96 in all, fire water jets at random so they collide in the middle and leave a patch of even turbulence there for particle-settling experiments.</p>
+        <dl class="spec">
+          <dt>Envelope</dt><dd>105 &times; 105 &times; 129 cm</dd>
+          <dt>Forcing</dt><dd>96 pumps in 4 corner arrays</dd>
+          <dt class="opt">Firing</dt><dd class="opt">Random jet array</dd>
+          <dt>Outlets</dt><dd>Swirling</dd>
+        </dl>
+        <div class="actions">
+          <a class="btn" href="#tankmn-details">Details<span class="sr-only"> of tankmn</span> &rarr;</a>
+        </div>
+      </div>
+      <figure class="demo">
+        <div class="demo-frame video" aria-hidden="true"><video src="media/tank-assembly.mp4" poster="media/tank-assembly.jpg" muted loop playsinline preload="metadata"></video></div>
+        <figcaption><span><b>Fig. 2</b><span class="ct">The tank, from the CAD model</span></span><button type="button" class="demo-toggle" aria-pressed="false">Pause</button></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- products -->
+  <section class="slide" data-id="products" data-name="Products" aria-labelledby="name-products">
+    <div class="wrap">
+      <div class="cat-head">
+        <span class="label">Catalogue</span>
+        <h2 id="name-products">Products</h2>
+        <p class="tagline ph">Placeholder: what you sell, and how it&rsquo;s made.</p>
+      </div>
+      <!-- each Buy link goes to its Gumroad product page (https://<name>.gumroad.com/l/<product>), in a new tab. -->
+      <table class="catalogue">
+        <thead><tr><th>Product</th><th class="c-desc">Description</th><th>Price</th><th><span class="sr-only">Buy</span></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="mark-hold" data-word="flow"><span class="sr-only">flowmn</span></span></td>
+            <td class="c-desc ph">Placeholder: what you get, in a line.</td>
+            <td class="price">$00</td>
+            <td><a class="btn btn-fill" href="#products">Buy</a></td>
+          </tr>
+          <tr>
+            <td class="blank-name">Product name</td>
+            <td class="c-desc ph">Placeholder: what you get, in a line.</td>
+            <td class="price">$00</td>
+            <td><a class="btn btn-fill" href="#products">Buy</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- contact -->
+  <section class="slide inv" data-id="contact" data-name="Contact" aria-labelledby="name-contact">
+    <div class="wrap c-body">
+      <span class="label">Contact</span>
+      <h2 class="c-big" id="name-contact">Contact</h2>
+      <p class="tagline ph">Placeholder: the best way to reach you, and what you&rsquo;re happy to hear about.</p>
+      <div class="actions"><a class="btn btn-fill" href="https://github.com/SPC3MN" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-gh"/></svg>GitHub <span class="repo">SPC3MN</span></a></div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== details: one document per model, and About ===== -->
+<article class="detail" id="d-flowmn" data-page="flowmn" aria-labelledby="d-name-flowmn" inert>
+  <header class="d-head"><div class="d-wrap">
+    <a class="d-back" href="#flowmn">&larr; Back to flowmn</a>
+    <div class="eyebrow"><span class="label">Desktop app</span></div>
+    <h1 class="p-mark" id="d-name-flowmn"><span class="mark-hold" data-word="flow"><span class="sr-only">flowmn</span></span></h1>
+    <p class="tagline" data-slot="projects.pivmn.summary" data-hint="One line on what flowmn does"></p>
+  </div></header>
+  <div class="d-wrap d-body">
+    <p class="d-lede ph">Placeholder: an introduction to flowmn, in a sentence or two.</p>
+    <section class="d-sec"><span class="d-num">1</span><h2>Overview</h2><p class="ph">Placeholder: what flowmn is, the problem it solves, and why it was built.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 1.1 &middot; pending</span></div><figcaption><b>Fig. 1.1</b>Placeholder caption</figcaption></figure></section>
+    <section class="d-sec"><span class="d-num">2</span><h2>How it works</h2><p class="ph">Placeholder: a walk through how flowmn works, step by step.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 1.2 &middot; pending</span></div><figcaption><b>Fig. 1.2</b>Placeholder caption</figcaption></figure></section>
+    <section class="d-sec"><span class="d-num">3</span><h2>Results</h2><p class="ph">Placeholder: what flowmn produces, with an example.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 1.3 &middot; pending</span></div><figcaption><b>Fig. 1.3</b>Placeholder caption</figcaption></figure></section>
+    <a class="d-back d-end" href="#flowmn">&larr; Back to flowmn</a>
+  </div>
+</article>
+<article class="detail" id="d-tankmn" data-page="tankmn" aria-labelledby="d-name-tankmn" inert>
+  <header class="d-head"><div class="d-wrap">
+    <a class="d-back" href="#tankmn">&larr; Back to tankmn</a>
+    <div class="eyebrow"><span class="label">Lab facility</span></div>
+    <h1 class="p-mark" id="d-name-tankmn"><span class="mark-hold" data-word="tank"><span class="sr-only">tankmn</span></span></h1>
+    <p class="tagline" data-slot="projects.tankmn.summary" data-hint="One line on what tankmn is">A turbulence tank: four corner arrays of 24 pumps, 96 in all, fire water jets at random so they collide in the middle and leave a patch of even turbulence there for particle-settling experiments.</p>
+  </div></header>
+  <div class="d-wrap d-body">
+    <p class="d-lede ph">Placeholder: an introduction to tankmn, in a sentence or two.</p>
+    <section class="d-sec"><span class="d-num">1</span><h2>Overview</h2><p class="ph">Placeholder: what tankmn is, the problem it solves, and why it was built.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 2.1 &middot; pending</span></div><figcaption><b>Fig. 2.1</b>Placeholder caption</figcaption></figure></section>
+    <section class="d-sec"><span class="d-num">2</span><h2>How it works</h2><p class="ph">Placeholder: a walk through how tankmn works, step by step.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 2.2 &middot; pending</span></div><figcaption><b>Fig. 2.2</b>Placeholder caption</figcaption></figure></section>
+    <section class="d-sec"><span class="d-num">3</span><h2>Results</h2><p class="ph">Placeholder: what tankmn produces, with an example.</p>
+      <figure class="d-fig"><div class="demo-pending"><span>Fig. 2.3 &middot; pending</span></div><figcaption><b>Fig. 2.3</b>Placeholder caption</figcaption></figure></section>
+    <a class="d-back d-end" href="#tankmn">&larr; Back to tankmn</a>
+  </div>
+</article>
+<article class="detail" id="d-about" data-page="about" aria-labelledby="d-name-about" inert>
+  <header class="d-head"><div class="d-wrap">
+    <a class="d-back" href="#">&larr; Back to the index</a>
+    <h1 class="d-title" id="d-name-about">About</h1>
+    <p class="tagline ph">Placeholder: your name, and what you do, in one line.</p>
+  </div></header>
+  <div class="d-wrap d-body">
+    <div class="d-photo demo-pending"><span>Photo</span></div>
+    <p class="d-lede ph">Placeholder: a short introduction: who you are, where you work, and what you like to build.</p>
+    <section class="d-sec"><span class="d-num">1</span><h2>Background</h2><p class="ph">Placeholder: your education and the path that led here.</p></section>
+    <section class="d-sec"><span class="d-num">2</span><h2>Research</h2><p class="ph">Placeholder: what you study, and the questions you are working on.</p></section>
+    <section class="d-sec"><span class="d-num">3</span><h2>Practice</h2><p class="ph">Placeholder: the kinds of design and engineering work you take on.</p></section>
+    <p class="d-links"><a href="https://github.com/SPC3MN" target="_blank" rel="noopener">GitHub &nearr;</a></p>
+    <a class="d-back d-end" href="#">&larr; Back to the index</a>
+  </div>
+</article>
+
+<nav class="index-scale" aria-label="Sheets"></nav>
+
+<!-- ===== title block, bottom ===== -->
+<footer class="ftr">
+  <span class="f-name">Index</span>
+  <span class="f-page">00 / 04</span>
+  <button type="button" class="f-prev" aria-label="Previous sheet"><svg aria-hidden="true"><use href="#i-up"/></svg></button>
+  <button type="button" class="f-next" aria-label="Next sheet"><svg aria-hidden="true"><use href="#i-down"/></svg></button>
+</footer>
+
+<div class="editbar" id="editbar" hidden>
+  <div class="inner"><span class="status" id="status">Tap Edit to write</span><button type="button" id="edit">Edit</button></div>
+</div>
+
+
+<script>
+(() => {
+  const STASH = "mn-unsaved";
+  const slots = [...document.querySelectorAll("[data-slot]")];
+  const bar = document.getElementById("editbar"), statusEl = document.getElementById("status"), editBtn = document.getElementById("edit");
+  let content = null, art = null, editing = false, dirty = false, saving = false, readOnly = false, timer = null, retried = false;
+
+  const get = (path) => path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), content);
+  function put(path, value) {
+    const keys = path.split(".");
+    let o = content;
+    for (const k of keys.slice(0, -1)) o = o[k] = o[k] && typeof o[k] === "object" ? o[k] : {};
+    o[keys[keys.length - 1]] = value;
+  }
+  const say = (t, state) => {
+    statusEl.textContent = t;
+    bar.dataset.state = state || (/^Saved/.test(t) ? "saved" : /Saving|Unsaved|restored|trying/.test(t) ? "unsaved" : /can't|Couldn't|failed/.test(t) ? "error" : "");
+  };
+
+  // ---- show the text: what you wrote, or (while editing) a hint where nothing is written yet
+  function render() {
+    if (!content) return;
+    for (const el of slots) {
+      if (editing && el === document.activeElement) continue;
+      const v = get(el.dataset.slot);
+      if (typeof v === "string") el.textContent = v;
+      const empty = !el.textContent.trim();
+      el.classList.toggle("empty", empty);
+      el.hidden = empty && !editing;
+    }
+  }
+
+  // ---- editing
+  function setEditing(on) {
+    editing = on;
+    document.documentElement.classList.toggle("editing", on);
+    for (const el of slots) {
+      if (on) {
+        try { el.contentEditable = "plaintext-only"; } catch (e) { el.contentEditable = "true"; }
+        if (el.contentEditable !== "plaintext-only") el.contentEditable = "true";
+        el.spellcheck = true;
+      } else el.removeAttribute("contenteditable");
+    }
+    editBtn.textContent = on ? "Done" : "Edit";
+    if (!on) { if (dirty) save(); else say(readOnly ? "This view can't save" : "Saved"); }
+    else say(dirty ? "Unsaved changes" : "Tap any outlined text to write");
+    render();
+  }
+  editBtn.addEventListener("click", () => setEditing(!editing));
+  // leaving the page with unsaved text: save it now
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  for (const el of slots) {
+    el.addEventListener("input", () => {
+      if (!editing) return;
+      put(el.dataset.slot, el.innerText.replace(/\n$/, ""));
+      el.classList.toggle("empty", !el.innerText.trim());
+      dirty = true;
+      say(readOnly ? "This view can't save; your text stays here until you leave" : "Unsaved changes");
+      schedule();
+    });
+    el.addEventListener("paste", (e) => {            // plain text only, for browsers without plaintext-only editing
+      if (el.contentEditable !== "true") return;
+      e.preventDefault();
+      const t = (e.clipboardData || window.clipboardData).getData("text/plain");
+      document.execCommand("insertText", false, t);
+    });
+    el.addEventListener("blur", () => { if (dirty) schedule(600); });
+  }
+
+  function schedule(ms = 2500) {
+    if (readOnly || !art) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => { timer = null; save(); }, ms);
+  }
+
+  async function save() {
+    if (!dirty || saving || readOnly || !art) return;
+    saving = true;
+    say("Saving…");
+    const sent = JSON.stringify(content, null, 2);
+    try { sessionStorage.setItem(STASH, sent); } catch (e) {}
+    try {
+      await art.publish({ "content.json": { content: sent, contentType: "application/json" } });
+      if (JSON.stringify(content, null, 2) === sent) dirty = false;
+      try { sessionStorage.removeItem(STASH); } catch (e) {}
+      retried = false;
+      say(dirty ? "Unsaved changes" : "Saved");
+    } catch (err) {
+      const code = err && err.code;
+      if (["not_writer", "not_granted", "capability_disabled", "capability_removed", "not_declared", "consent_required", "read_only_path"].includes(code)) {
+        readOnly = true;
+        say("This view can't save; your text stays here until you leave");
+      } else if (code === "conflict") {
+        say("A newer version was saved elsewhere; reloading it");
+      } else if (code === "rate_limited") {
+        say("Saving a lot; trying again shortly"); saving = false; schedule(10000); return;
+      } else if (code === "upstream_error" && !retried) {
+        retried = true; say("Save failed; trying once more"); saving = false; schedule(1500 + Math.random() * 2000); return;
+      } else {
+        say("Couldn't save (" + (code || "error") + "); your text is still here");
+      }
+    } finally {
+      saving = false;
+      if (dirty && !readOnly && !timer && !editing) schedule();
+    }
+  }
+
+  // ---- load your text, then light up editing where this view may save
+  const fallback = { version: 1, site: {}, projects: {} };
+  fetch("content.json", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .catch(() => fallback)
+    .then((c) => {
+      content = c;
+      try {                                            // text typed before a save was interrupted
+        const stash = sessionStorage.getItem(STASH);
+        if (stash) { content = JSON.parse(stash); dirty = true; }
+      } catch (e) {}
+      render();
+      if (dirty) { say("Unsaved text restored"); schedule(); }
+    });
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("artifact").then((a) => {
+      art = a;
+      if (!a) return;
+      bar.hidden = false;
+      if (dirty) schedule();
+    });
+  }
+
+  // ---- the sheets. One shows at a time between the title blocks; a step slides the whole sheet up (or down) and the
+  // next one in after it. The marks are drawn here: mn alone in dots on the index (with its dimensions), and each
+  // model's name in Heros Cn Bold with the dot mn after it.
+  (function deck() {
+    const deckEl = document.querySelector(".deck");
+    const slides = [...deckEl.querySelectorAll(".slide")];
+    const ids = slides.map((s) => s.dataset.id);
+    const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const NS = "http://www.w3.org/2000/svg";
+    const f = (v) => +v.toFixed(3);
+    const svgEl = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+    const pad2 = (n) => String(n).padStart(2, "0");
+
+    // ---- the dot mn: 6 dots high on a pitch of 1, dots 0.9 across (m 8 wide, a 1-dot gap, n 5 wide)
+    const dotsOf = (list) => list.flatMap(([x0, rows]) => rows.split("|").flatMap((row, y) =>
+      [...row].flatMap((ch, x) => (ch === "#" ? [{ x: x0 + x + 0.5, y: y + 0.5 }] : []))));
+    const MN = dotsOf([[0, "#.#####.|########|##.##.##|##.##.##|##.##.##|##.##.##"], [9, "#.##.|#####|##.##|##.##|##.##|##.##"]]);
+    const dots = (g, dx = 0, s = 1, cls, list = MN) => list.forEach((d, i) => {
+      const c = svgEl("circle", { cx: f(dx + d.x * s), cy: f(d.y * s), r: f(0.45 * s) });
+      if (cls) { c.setAttribute("class", cls); c.style.setProperty("--i", Math.round(d.x * 6 + d.y)); }
+      g.append(c);
+    });
+
+    // the header's small mark
+    const small = document.querySelector(".mn-small");
+    small.setAttribute("viewBox", "0 0 14 6"); dots(small);
+
+    // the index's large mark: mn as an engineering drawing on its own sheet. A zoned border and a title block (titled
+    // MODEL NUMBER); a faint construction grid at the dot pitch; dash-dot centre lines; top and base reference lines;
+    // chain dimensions for the m and the n, overall dimensions and a callout for the dots. Units are dot pitches (p).
+    let bigDrawn = false;
+    function drawBig() {
+      const svg = document.querySelector(".mn-big");
+      const host = svg.parentElement;
+      svg.replaceChildren();
+      const W = 14, O = { x0: -2.6, y0: -2.6, x1: 30.6, y1: 10.6 }, IN = 0.45;
+      svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
+      const sheet = svgEl("g", { class: "dims" });
+      const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
+      const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
+      const head = (x, y, ang) => el("path", { d: "M0,0 L-0.3,-0.085 L-0.3,0.085 Z", class: "dim-head", transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
+      const text = (x, y, str, cls = "fine", attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: cls, ...attrs }); t.textContent = str; return t; };
+      const hdim = (xa, xb, y, label, cls = "fine", ty = y - 0.22) => { line(xa, y, xb, y); head(xa, y, 180); head(xb, y, 0); text((xa + xb) / 2, ty, label, cls, { "text-anchor": "middle" }); };
+      const vdim = (ya, yb, x, label, cls = "fine", tx = x + 0.3) => {
+        line(x, ya, x, yb); head(x, ya, -90); head(x, yb, 90);
+        text(tx, (ya + yb) / 2, label, cls, { "text-anchor": "middle", transform: `rotate(90 ${f(tx)} ${f((ya + yb) / 2)})` });
+      };
+
+      // the sheet: border, zone band with 8 zones across and A to C down
+      el("rect", { x: O.x0, y: O.y0, width: f(O.x1 - O.x0), height: f(O.y1 - O.y0), class: "frame-out" });
+      el("rect", { x: O.x0 + IN, y: O.y0 + IN, width: f(O.x1 - O.x0 - 2 * IN), height: f(O.y1 - O.y0 - 2 * IN), class: "frame" });
+      const zw = (O.x1 - O.x0) / 8, zh = (O.y1 - O.y0) / 3;
+      for (let z = 0; z < 8; z++) {
+        const x = O.x0 + z * zw;
+        if (z) { line(x, O.y0, x, O.y0 + IN, "frame fine-l"); line(x, O.y1 - IN, x, O.y1, "frame fine-l"); }
+        text(x + zw / 2, O.y0 + 0.33, String(z + 1), "zone fine", { "text-anchor": "middle" });
+        text(x + zw / 2, O.y1 - 0.12, String(z + 1), "zone fine", { "text-anchor": "middle" });
+      }
+      for (let z = 0; z < 3; z++) {
+        const y = O.y0 + z * zh;
+        if (z) { line(O.x0, y, O.x0 + IN, y, "frame fine-l"); line(O.x1 - IN, y, O.x1, y, "frame fine-l"); }
+        text(O.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
+        text(O.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
+      }
+      // the title block, bottom right: the part, its title, drawing number and revision
+      const tb = { x1: O.x1 - IN, y1: O.y1 - IN }; tb.x0 = tb.x1 - 13.2; tb.y0 = tb.y1 - 1.05;
+      const c1 = tb.x0 + 2.4, c2 = tb.x0 + 8.4, c3 = tb.x0 + 11.2;
+      el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame" });
+      for (const x of [c1, c2, c3]) line(x, tb.y0, x, tb.y1, "frame");
+      text(tb.x0 + 0.3, tb.y1 - 0.3, "mn", "tb-name");
+      text(c1 + 0.25, tb.y0 + 0.33, "TITLE", "tb-key fine"); text(c1 + 0.25, tb.y1 - 0.2, "MODEL NUMBER", "tb-val tb-title");
+      text(c2 + 0.25, tb.y0 + 0.33, "DWG NO.", "tb-key fine"); text(c2 + 0.25, tb.y1 - 0.2, "MN-000", "tb-val fine");
+      text(c3 + 0.25, tb.y0 + 0.33, "REV", "tb-key fine"); text(c3 + 0.25, tb.y1 - 0.2, "C", "tb-val fine");
+      text(7, 9.35, "FRONT VIEW", "detail-tag", { "text-anchor": "middle" });
+      text(O.x0 + IN + 0.3, O.y1 - IN - 0.3, "NOTES: 1. UNITS p = DOT PITCH.  2. HOLES THRU.  3. TOL ±0.05 U.N.O.", "fine");
+      // third-angle projection: a truncated cone's side view, then its end view
+      const px0 = tb.x0 + 0.2, py0 = tb.y0 - 0.95;
+      el("path", { d: `M${px0},${py0 + 0.2} L${px0 + 1.0},${py0} L${px0 + 1.0},${py0 + 0.8} L${px0},${py0 + 0.6} Z`, class: "frame" });
+      el("circle", { cx: px0 + 1.75, cy: py0 + 0.4, r: 0.4, class: "frame" }); el("circle", { cx: px0 + 1.75, cy: py0 + 0.4, r: 0.2, class: "frame" });
+      text(px0 + 2.45, py0 + 0.52, "THIRD ANGLE PROJECTION", "tb-key");
+      text(tb.x1, py0 + 0.52, "SCALE 1:1 · SHEET 1 OF 1", "tb-key", { "text-anchor": "end" });
+
+      // ---- the front view: mn
+      const grid = el("g", { class: "grid-l fine-l" });
+      for (let x = 0; x <= W; x++) el("line", { x1: x, y1: 0, x2: x, y2: 7 }, grid);
+      for (let y = 0; y <= 7; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
+      for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");             // centre lines: the m, the n, and across
+      line(-0.7, 3, W + 0.7, 3, "cl fine-l");
+      line(-1.9, 0, W + 0.3, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");        // reference lines, named above their left ends
+      line(-1.9, 6, W + 0.3, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");
+      for (const [a, b, label] of [[0, 8, "8"], [9, 14, "5"]]) {                      // chain dimensions: the m and the n
+        line(a, -0.2, a, -1.35); line(b, -0.2, b, -1.35);
+        hdim(a, b, -1.1, label);
+      }
+      line(W + 0.2, 0, W + 1.0, 0); line(W + 0.2, 6, W + 1.0, 6);                     // height, right of the n
+      vdim(0, 6, W + 0.75, "6 p", "lbl", W + 1.2);
+      line(0, 6.25, 0, 8.65); line(W, 6.25, W, 8.65);                                 // overall width, below
+      hdim(0, W, 8.4, "14 p", "lbl", 8.2);
+      // the holes: a callout from the m's last hole, a tolerance, and a position tolerance to datums A and B
+      line(7.82, 5.82, 8.5, 6.85); line(8.5, 6.85, 8.95, 6.85);
+      text(9.05, 6.97, `${MN.length}× Ø 0.90 ±0.02 THRU`, "callout");
+      const fcf = [[9.05, "⌖"], [9.75, "Ø 0.05"], [11.6, "A"], [12.2, "B"]], fy = 7.18, fh = 0.6;
+      el("rect", { x: 9.05, y: fy, width: 3.75, height: fh, class: "frame" });
+      for (const [x, str] of fcf) { if (x > 9.05) line(x, fy, x, fy + fh, "frame"); text(x + (x === 9.05 ? 0.35 : 0.3), fy + 0.43, str, "fcf", x === 9.05 ? { "text-anchor": "middle" } : {}); }
+      // datum A: the base; datum B: the m's left edge
+      const datum = (x, y, tx, ty, letter, vertical) => {
+        el("path", { d: vertical ? `M${x - 0.18},${y} L${x + 0.18},${y} L${x},${y + 0.3} Z` : `M${x},${y - 0.18} L${x},${y + 0.18} L${x - 0.3},${y} Z`, class: "dim-head" });
+        line(vertical ? x : x - 0.3, vertical ? y + 0.3 : y, tx + (vertical ? 0 : 0.5), ty + (vertical ? 0 : 0.3));
+        el("rect", { x: tx - (vertical ? 0.3 : 0), y: ty, width: 0.6, height: 0.6, class: "frame" });
+        text(tx + (vertical ? 0 : 0.3), ty + 0.44, letter, "fcf", { "text-anchor": "middle" });
+      };
+      datum(2.5, 6, 2.5, 6.75, "A", true);
+      datum(0.05, 2.5, -1.5, 2.2, "B", false);
+
+      svg.append(sheet);
+      // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark
+      const holes = svgEl("g", { class: "holes" });
+      for (const d of MN) {
+        const c = svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole" });
+        c.style.setProperty("--i", Math.round(d.x * 6 + d.y));
+        holes.append(c, svgEl("path", { d: `M${d.x - 0.2},${d.y}h0.4M${d.x},${d.y - 0.2}v0.4`, class: "cm" }));
+      }
+      svg.append(holes);
+      if (!still && !bigDrawn) host.classList.add("boot"); else host.classList.remove("boot");
+      bigDrawn = true;
+      const compact = () => host.classList.toggle("compact", host.clientWidth < 640);
+      compact();
+      if (!host.dataset.watched) {
+        host.dataset.watched = "1";
+        if ("ResizeObserver" in window) new ResizeObserver(compact).observe(host); else window.addEventListener("resize", compact);
+      }
+    }
+
+    // a model's mark: its name in Heros Cn Bold, then the dot mn 1.03 (in the mark's units) after it, the letters'
+    // baseline 0.093 above the mn's foot, cropped close around the ink
+    const FONT = "'Heros Cn', 'Helvetica Neue', 'Arial Narrow', sans-serif";
+    const FS = 8.55 / 0.7662, BASE = 5.95 - 0.093 / 0.7662, GAP = 1.03 / 0.7662;
+    const measure = document.createElement("canvas").getContext("2d");
+    function modelMark(word) {
+      measure.font = `700 100px ${FONT}`;
+      const m = measure.measureText(word), k = FS / 100;
+      const adv = m.width * k, inkL = (m.actualBoundingBoxLeft || 0) * k;
+      const asc = (m.actualBoundingBoxAscent || 72) * k, desc = (m.actualBoundingBoxDescent || 0) * k;
+      const mnLeft = adv + GAP - 0.05;
+      const top = Math.min(BASE - asc, 0) - 0.1, bottom = Math.max(BASE + desc, 5.95) + 0.1;
+      const left = -inkL - 0.1, right = mnLeft + 14;
+      const svg = svgEl("svg", { class: "mark", viewBox: `${f(left)} ${f(top)} ${f(right - left)} ${f(bottom - top)}`, "aria-hidden": "true" });
+      const t = svgEl("text", { "font-family": FONT, "font-weight": 700, x: 0, y: f(BASE), "font-size": f(FS) });
+      t.textContent = word;
+      svg.append(t);
+      dots(svg, mnLeft);
+      return svg;
+    }
+    function drawMarks() {
+      for (const hold of document.querySelectorAll(".mark-hold")) {
+        hold.querySelector("svg.mark")?.remove();
+        hold.append(modelMark(hold.dataset.word));
+      }
+    }
+    const fontReady = document.fonts && document.fonts.load
+      ? Promise.race([document.fonts.load(`700 20px "Heros Cn"`), new Promise((r) => setTimeout(r, 2500))]).catch(() => {})
+      : Promise.resolve();
+    drawMarks(); drawBig();                                            // at once in the fallback face, then again in Heros Cn
+    fontReady.then(() => { drawMarks(); drawBig(); fitDemos(); });
+
+    // ---- the sheet index at the side and the title block at the foot
+    const scale = document.querySelector(".index-scale");
+    const marks = slides.map((s, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = pad2(i);
+      b.setAttribute("aria-label", s.dataset.name.replace(/·/g, ","));
+      b.addEventListener("click", () => go(i));
+      scale.append(b);
+      return b;
+    });
+    const fName = document.querySelector(".f-name"), fPage = document.querySelector(".f-page");
+    const fPrev = document.querySelector(".f-prev"), fNext = document.querySelector(".f-next");
+    const navLinks = [...document.querySelectorAll(".nav a[data-to]")];
+    const details = Object.fromEntries([...document.querySelectorAll(".detail")].map((d) => [d.dataset.page, d]));
+    const nav = document.getElementById("nav"), menuBtn = document.querySelector(".menu-btn");
+    let index = 0, busy = false, openId = "";
+
+    function mark() {
+      const s = slides[index];
+      marks.forEach((b, i) => (i === index ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")));
+      document.body.classList.toggle("inv-on", s.classList.contains("inv"));
+      fName.textContent = openId === "about" ? "About" : s.dataset.name + (openId ? " · Details" : "");
+      fPage.textContent = `${pad2(index)} / ${pad2(slides.length - 1)}`;
+      fPrev.disabled = index === 0 || !!openId; fNext.disabled = index === slides.length - 1 || !!openId;
+      const id = ids[index], section = openId === "about" ? "about" : !id ? "" : /mn$/.test(id) ? "flowmn" : id;
+      navLinks.forEach((a) => (a.dataset.to === section ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+      const h = openId === "about" ? "#about" : id ? "#" + id + (openId ? "-details" : "") : location.pathname + location.search;
+      try { history.replaceState(null, "", h); } catch (e) {}
+    }
+    function settle(n) {
+      slides.forEach((s, i) => {
+        s.classList.remove("anim");
+        s.classList.toggle("shown", i === n);
+        s.style.transform = i === n ? "none" : "";
+        s.inert = i !== n;
+      });
+    }
+    function go(n) {
+      n = Math.max(0, Math.min(slides.length - 1, n));
+      if (n === index || busy || openId) return;
+      const from = slides[index], to = slides[n], dir = n > index ? 1 : -1;
+      index = n;
+      mark();
+      if (still) { settle(n); return; }
+      busy = true;
+      to.classList.remove("anim");
+      to.style.transform = `translateY(${dir * 100}%)`;
+      to.classList.add("shown");
+      void to.offsetHeight;                                            // start the new sheet off-screen before moving
+      from.classList.add("anim"); to.classList.add("anim");
+      from.style.transform = `translateY(${-dir * 100}%)`;
+      to.style.transform = "none";
+      from.inert = true; to.inert = false;
+      setTimeout(() => { settle(n); busy = false; }, 720);
+    }
+
+    // ---- details: a document over the sheet, at #<model>-details; Back, the browser's Back or Esc close it
+    function openDetail(id) {
+      const d = details[id];
+      if (!d) return;
+      if (openId && openId !== id) closeDetail();
+      openId = id;
+      d.inert = false; d.scrollTop = 0; d.classList.add("open"); document.body.classList.add("reading");
+      deckEl.inert = true; scale.inert = true;
+      d.querySelector(".d-back").focus({ preventScroll: true });
+    }
+    function closeDetail() {
+      if (!openId) return;
+      const d = details[openId];
+      openId = "";
+      d.classList.remove("open"); d.inert = true; document.body.classList.remove("reading");
+      deckEl.inert = false; scale.inert = false;
+    }
+    function route(e) {                                                // e: a hashchange; without one (the first load), land at once
+      const h = location.hash.replace("#", "").replace(/^pivmn/, "flowmn");   // PIVmn was renamed flowmn: old links land there
+      const more = h.endsWith("-details") ? h.slice(0, -8) : "";
+      closeMenu();
+      if (h === "about") { openDetail("about"); mark(); return; }
+      if (more && details[more]) {
+        const n = ids.indexOf(more);
+        if (n !== index) { index = n; settle(n); }
+        openDetail(more); mark(); return;
+      }
+      closeDetail();
+      const n = Math.max(0, ids.indexOf(h));
+      if (n !== index && !e) { index = n; settle(n); }
+      if (n !== index) go(n); else mark();
+    }
+    settle(0);
+    route();
+    window.addEventListener("hashchange", route);
+    document.querySelector(".brand").addEventListener("click", (e) => { e.preventDefault(); location.hash = ""; route(e); });
+    navLinks.forEach((a) => a.dataset.to === "" && a.addEventListener("click", (e) => { e.preventDefault(); location.hash = ""; route(e); }));
+    for (const a of document.querySelectorAll('.d-back[href="#"]')) a.addEventListener("click", (e) => { e.preventDefault(); location.hash = ""; route(e); });
+
+    // ---- getting around: swipe, wheel or trackpad, keys, the scale, the title block's arrows
+    const inText = (el) => editing && el && el.closest && el.closest("[data-slot]");
+    fPrev.addEventListener("click", () => go(index - 1));
+    fNext.addEventListener("click", () => go(index + 1));
+    let sy = 0, sx = 0, t0 = 0, axis = "";
+    deckEl.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1 || inText(e.target)) { axis = "skip"; return; }
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = performance.now(); axis = "";
+    }, { passive: true });
+    deckEl.addEventListener("touchmove", (e) => {
+      if (axis === "skip") return;
+      const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+      if (!axis && Math.hypot(dx, dy) > 8) axis = Math.abs(dy) > Math.abs(dx) ? "y" : "x";
+      if (axis === "y" && e.cancelable) e.preventDefault();
+    }, { passive: false });
+    deckEl.addEventListener("touchend", (e) => {
+      const was = axis; axis = "";
+      if (was !== "y") return;
+      const dy = e.changedTouches[0].clientY - sy, dt = Math.max(1, performance.now() - t0);
+      if (Math.abs(dy) < 30 && Math.abs(dy) / dt < 0.3) return;
+      go(index + (dy < 0 ? 1 : -1));
+    }, { passive: true });
+    // one wheel turn or trackpad swipe moves one sheet; the rest of that gesture (and its coasting) is ignored
+    let wheelSum = 0, wheelLast = 0, wheelSpent = false;
+    window.addEventListener("wheel", (e) => {
+      if (openId || inText(e.target) || e.target.closest?.(".nav")) return;
+      const now = performance.now();
+      if (now - wheelLast > 240) { wheelSum = 0; wheelSpent = false; }
+      wheelLast = now;
+      if (wheelSpent || busy) return;
+      wheelSum += e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+      if (Math.abs(wheelSum) > 40) { wheelSpent = true; go(index + Math.sign(wheelSum)); }
+    }, { passive: true });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && nav.classList.contains("open")) { closeMenu(); menuBtn.focus(); return; }
+      if (openId) { if (e.key === "Escape" && !inText(e.target)) location.hash = openId === "about" ? "" : "#" + openId; return; }
+      if (inText(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+      const k = e.key, onButton = e.target.closest && e.target.closest("button, a");
+      let n = null;
+      if (k === "ArrowDown" || k === "PageDown" || (k === " " && !onButton && !e.shiftKey)) n = index + 1;
+      else if (k === "ArrowUp" || k === "PageUp" || (k === " " && !onButton && e.shiftKey)) n = index - 1;
+      else if (k === "Home") n = 0;
+      else if (k === "End") n = slides.length - 1;
+      if (n === null) return;
+      e.preventDefault();
+      go(n);
+    });
+
+    // ---- the menu on narrow screens: the nav drops from the header
+    function closeMenu() { nav.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); }
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !nav.classList.contains("open");
+      nav.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+      if (open) nav.querySelector("a").focus({ preventScroll: true });
+    });
+    nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeMenu));
+    document.addEventListener("click", (e) => { if (!nav.contains(e.target) && e.target !== menuBtn) closeMenu(); });
+
+    // ---- a figure shrinks if its sheet is too short for it
+    function fitDemos() {
+      for (const s of slides) {
+        const body = s.querySelector(".p-body"), demo = body && body.querySelector(".demo");
+        if (!demo) continue;
+        demo.style.width = ""; demo.style.justifySelf = "";
+        const cs = getComputedStyle(s), room = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        const full = demo.offsetWidth;
+        for (let pass = 0; pass < 3; pass++) {
+          const over = body.offsetHeight - room;
+          if (over <= 0) break;
+          const frame = demo.querySelector(".demo-frame, .demo-pending"), h = frame.offsetHeight, w = demo.offsetWidth;
+          demo.style.width = Math.max(0.3 * full, (w * (h - over)) / h) + "px";
+          demo.style.justifySelf = "center";
+        }
+      }
+    }
+    fitDemos();
+    window.addEventListener("resize", fitDemos);
+    if ("ResizeObserver" in window) { const ro = new ResizeObserver(() => requestAnimationFrame(fitDemos)); document.querySelectorAll(".p-text").forEach((t) => ro.observe(t)); }
+  })();
+  // ---- video runs (tankmn): play only while on screen and not paused; under reduced motion, the still poster
+  (function videoRuns() {
+    const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    for (const v of document.querySelectorAll(".demo-frame video")) {
+      const btn = v.closest(".demo").querySelector(".demo-toggle");
+      if (still) { if (btn) btn.hidden = true; continue; }
+      let paused = false, visible = false;
+      const sync = () => { if (visible && !paused) v.play().catch(() => {}); else v.pause(); };
+      if ("IntersectionObserver" in window) new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; sync(); }).observe(v);
+      else { visible = true; sync(); }
+      if (btn) btn.addEventListener("click", () => {
+        paused = !paused;
+        btn.textContent = paused ? "Play" : "Pause";
+        btn.setAttribute("aria-pressed", String(paused));
+        sync();
+      });
+    }
+  })();
+
+
+})();
+</script>

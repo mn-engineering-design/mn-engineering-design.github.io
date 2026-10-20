@@ -50,8 +50,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 /* ---- title block, top: the mark, the sections, a menu on narrow screens */
 .hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;
        display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); }
-.brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); }
-.brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
+.brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); font: 700 1.3rem/1 var(--cn); letter-spacing: -0.01em; white-space: nowrap; }   /* the name, in the marks' Heros Cn Bold */
 .nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
 .nav a { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding-block: 0.4rem;
          border-bottom: 1.5px solid transparent; }
@@ -255,7 +254,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 <!-- ===== title block, top ===== -->
 <header class="hdr">
-  <a class="brand" href="#" aria-label="mn, back to the index"><svg class="mn-small" aria-hidden="true"></svg></a>
+  <a class="brand" href="#" aria-label="model number, back to the index">model number</a>
   <button type="button" class="menu-btn" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span><span></span></button>
   <nav class="nav" id="nav" aria-label="Site">
     <a href="#" data-to="">Index</a>
@@ -594,10 +593,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       if (cls) { c.setAttribute("class", cls); c.style.setProperty("--i", Math.round(d.x * 6 + d.y)); }
       g.append(c);
     });
-
-    // the header's small mark
-    const small = document.querySelector(".mn-small");
-    small.setAttribute("viewBox", "0 0 14 6"); dots(small);
 
     // the index's large mark: mn as an engineering drawing, pared down: the mark's holes as heavy rings, each as wide as
     // the logo's dot (0.9 on a pitch of 1, so the gaps are the logo's), with dash-dot centre lines and top and base

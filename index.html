@@ -123,6 +123,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
 .t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
 .t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
+.t-mark .zone { font-size: 0.3px; }
+.t-mark .grid-l line { stroke: var(--rule); stroke-width: 0.012; }
 .t-mark .tb-name { fill: var(--charcoal); font: 700 0.7px var(--display); letter-spacing: -0.02px; }
 .t-mark .tb-key { font-size: 0.26px; letter-spacing: 0.03px; }
 .t-mark .tb-title { fill: var(--charcoal); font: 600 0.46px var(--mono); letter-spacing: 0.06px; }
@@ -642,7 +644,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       svg.append(probe);
       const tw = line1 ? probe.getComputedTextLength() : 0;
       probe.remove();
-      const S = { x0: -3.7, y0: -2.5, x1: W + 3.7, y1: 8.6 }, IN = 0.3;   // the sheet, even either side so the mark sits centred
+      const S = { x0: -3.8, y0: -2.6, x1: W + 3.8, y1: 8.7 }, IN = 0.45;   // the sheet, even either side so the mark sits centred
       const fs = tw ? PROBE * W / tw : PROBE, wordsY = S.y1 + GAP + 0.734 * fs;
       const O = { x0: S.x0 - 0.1, y0: S.y0 - 0.1, x1: S.x1 + 0.1, y1: wordsY + 0.21 * fs + 0.3 };
       svg.setAttribute("viewBox", `${f(O.x0)} ${f(O.y0)} ${f(O.x1 - O.x0)} ${f(O.y1 - O.y0)}`);
@@ -660,6 +662,19 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       // ---- the sheet: a double border, and the title block in its bottom right corner (the mark, and its title)
       el("rect", { x: f(S.x0), y: f(S.y0), width: f(S.x1 - S.x0), height: f(S.y1 - S.y0), class: "frame-out" });
       el("rect", { x: f(S.x0 + IN), y: f(S.y0 + IN), width: f(S.x1 - S.x0 - 2 * IN), height: f(S.y1 - S.y0 - 2 * IN), class: "frame" });
+      // its zone band: ticks dividing it into 6 zones across, numbered, and A to C down
+      const NZ = 6, zw = (S.x1 - S.x0) / NZ, zh = (S.y1 - S.y0) / 3;
+      const zone = (x, y, str) => { const t = el("text", { x: f(x), y: f(y), class: "zone fine", "text-anchor": "middle" }); t.textContent = str; };
+      for (let z = 0; z < NZ; z++) {
+        const x = S.x0 + z * zw;
+        if (z) { line(x, S.y0, x, S.y0 + IN, "frame fine-l"); line(x, S.y1 - IN, x, S.y1, "frame fine-l"); }
+        zone(x + zw / 2, S.y0 + 0.33, String(z + 1)); zone(x + zw / 2, S.y1 - 0.12, String(z + 1));
+      }
+      for (let z = 0; z < 3; z++) {
+        const y = S.y0 + z * zh;
+        if (z) { line(S.x0, y, S.x0 + IN, y, "frame fine-l"); line(S.x1 - IN, y, S.x1, y, "frame fine-l"); }
+        zone(S.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z]); zone(S.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z]);
+      }
       const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - 7.6; tb.y0 = tb.y1 - 1.15;
       const tc = tb.x0 + 1.9;
       el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame" });
@@ -667,6 +682,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const tbt = (x, y, str, cls) => { const t = el("text", { x: f(x), y: f(y), class: cls }); t.textContent = str; };
       tbt(tb.x0 + 0.35, tb.y1 - 0.33, "mn", "tb-name");
       tbt(tc + 0.3, tb.y0 + 0.36, "TITLE", "tb-key fine"); tbt(tc + 0.3, tb.y1 - 0.24, "MODEL NUMBER", "tb-title");
+
+      // ---- a faint construction grid at the dot pitch, behind the mark
+      const grid = el("g", { class: "grid-l fine-l" });
+      for (let x = 0; x <= W; x++) el("line", { x1: x, y1: 0, x2: x, y2: 6 }, grid);
+      for (let y = 0; y <= 6; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
 
       // ---- the mark's centre lines: the m, the n, and across
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
@@ -682,11 +702,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       stroke(1, "line", [[W + 1.2, 0], [W + 1.2, 6]]);
       head(1, W + 1.2, 0, -90); head(1, W + 1.2, 6, 90);
       label(1, W + 1.5, 3.2, "6");
-      // ---- 3. one dot's diameter: an arrow in from the upper left to the m's first dot
-      const ex = 0.5 - 0.45 * Math.SQRT1_2, ey = 0.5 - 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
-      stroke(2, "line", [[-1.5, -0.95], [-0.9, -0.95], [ex, ey]]);
-      head(2, ex, ey, 45);
-      label(2, -1.6, -0.78, "\u00D8 0.9", { "text-anchor": "end" });
+      // ---- 3. one dot's diameter: an arrow in from the lower left to the m's bottom-left dot
+      const ex = 0.5 - 0.45 * Math.SQRT1_2, ey = 5.5 + 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
+      stroke(2, "line", [[-1.4, 6.95], [-0.9, 6.95], [ex, ey]]);
+      head(2, ex, ey, -45);
+      label(2, -1.5, 7.12, "\u00D8 0.9", { "text-anchor": "end" });
 
       // ---- the words, under the sheet, one line, as wide as the mark
       if (line1) { const t = el("text", { x: 0, y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }

@@ -120,7 +120,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .ref { stroke: var(--muted); stroke-width: 0.022; stroke-dasharray: 0.3 0.15; }
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
 .t-mark .aed { fill: var(--ink); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
-.t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.17px; }   /* RING in the script */   /* holes: a visible outline, heavier than the dimensions */
+.t-mark .hole { fill: var(--ink); stroke: none; }                                 /* the dots: solid, as in the logo */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
 .t-mark.compact .fine, .t-mark.compact .fine-l { display: none; }
 .intro { margin: 0; font: 700 clamp(1.4rem, 3vw, 2rem)/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); }
@@ -594,9 +594,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       g.append(c);
     });
 
-    // the index's large mark: mn as an engineering drawing, pared down: the mark's holes as heavy rings, each as wide as
-    // the logo's dot (0.9 on a pitch of 1, so the gaps are the logo's), with dash-dot centre lines and top and base
-    // reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
+    // the index's large mark: mn as an engineering drawing, pared down: the mark's dots, solid as in the logo (0.9 on a
+    // pitch of 1), with dash-dot centre lines and top and base reference lines; and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall
     // as the mark, from its top line to its base. On a phone the words go under the mark instead, each row exactly as wide
     // as the mark. Units are dot pitches.
     const stacked = window.matchMedia ? matchMedia("(max-width: 37.5rem)") : { matches: false };
@@ -643,11 +642,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       }
 
       svg.append(sheet);
-      // the mn's 62 holes, as heavy rings: the ring's outer edge is the logo's dot (r 0.45), its weight inside that
-      const RING = 0.17;                                               // the ring's weight, in pitches
+      // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1
       const holes = svgEl("g", { class: "holes" });
       for (const d of MN) {
-        const c = svgEl("circle", { cx: d.x, cy: d.y, r: f(0.45 - RING / 2), class: "dot hole" });
+        const c = svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole" });
         holes.append(c);
       }
       svg.append(holes);

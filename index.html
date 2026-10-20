@@ -49,8 +49,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 /* ---- title block, top: the mark, the sections, a menu on narrow screens */
 .hdr { position: fixed; z-index: 6; top: 0; left: 0; right: 0; box-sizing: border-box; height: calc(var(--hdr) + var(--top)); padding: var(--top) clamp(1rem, 3vw, 2rem) 0;
-       display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); transition: transform 0.5s ease, visibility 0.5s; }
-.home-on .hdr { transform: translateY(-100%); visibility: hidden; }          /* off the home sheet: back when you move on */
+       display: flex; align-items: center; gap: 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); }
 .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--ink); }
 .brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
@@ -86,11 +85,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .ftr button svg { width: 0.9rem; height: 0.9rem; }
 
 /* ---- the sheets: one at a time between the title blocks; a step slides the whole sheet up and the next in after it */
-.deck { position: fixed; left: 0; right: 0; top: var(--top); bottom: calc(var(--ftr) + var(--bot)); overflow: clip; touch-action: none; }
+.deck { position: fixed; left: 0; right: 0; top: calc(var(--hdr) + var(--top)); bottom: calc(var(--ftr) + var(--bot)); overflow: clip; touch-action: none; }
 .editing .deck { touch-action: auto; }
 .slide { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; overflow: clip;
-         padding-block: calc(var(--hdr) + clamp(1rem, 4vh, 3rem)) clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
-.slide[data-id=""] { padding-top: clamp(1rem, 4vh, 3rem); }                 /* the home sheet has no title block over it: it fills the screen */
+         padding-block: clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
 .slide.shown { visibility: visible; }
 .slide.anim { transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
 
@@ -114,9 +112,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-grid { display: grid; max-width: none; }                                                /* the index runs the full width of the page */
 .t-top { display: grid; gap: clamp(1.25rem, 3.5vh, 2.25rem); align-items: center; min-width: 0; }
 .t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
-/* the drawing, with the words beside it on a wide screen, the two centred together and filling the sheet; on a phone the
-   words go under it (the drawing's sheet is 21.8 x 13.4) */
-.t-mark { justify-self: center; width: min(100%, (100vh - 19rem) * 1.63); width: min(100%, (100svh - 19rem) * 1.63); }
+/* the drawing fills the sheet, centred: as wide as the page, or as the height allows (--aspect: the drawing's width over
+   its height, set by the script, since the words' width decides it) */
+.t-mark { justify-self: center; width: min(100%, (100vh - 12rem) * var(--aspect, 2.5)); width: min(100%, (100svh - 12rem) * var(--aspect, 2.5)); }
 .t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
@@ -135,28 +133,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .tb-title { fill: var(--ink); font-size: 0.42px; letter-spacing: 0.06px; }
 .t-mark .zone { font-size: 0.3px; }
 .t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
-.t-mark .edge { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* the side view's outline */
-.t-mark .hid { stroke: var(--ink-2); stroke-width: 0.025; stroke-dasharray: 0.16 0.08; }   /* hidden lines: short dashes */
-.t-mark .view-tag { fill: var(--ink-2); font-size: 0.34px; font-weight: 600; letter-spacing: 0.05px; }
-.t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* holes: a visible outline, heavier than the dimensions */
+.t-mark .aed { fill: var(--ink); font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }   /* the words, in the drawing */
+.t-mark .aed-side { fill: color-mix(in srgb, var(--ink) calc(40% + 60% * var(--k)), var(--paper)); }   /* their extrusion, darker to the back */
+.t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.1; }   /* holes: a visible outline, heavier than the dimensions */
 .t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
-.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key, .t-mark.compact .view-tag { display: none; }
+.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key { display: none; }
 .t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; }
-.intro, .x3d-layer { margin: 0; width: min-content; font: 700 clamp(2.4rem, 4.9vw, 5.2rem)/1.0 var(--display); letter-spacing: -0.035em; }
-.intro { position: relative; color: var(--ink); }
-/* the words, extruded: copies stacked behind them (made by the script, x3d), darker towards the back, the whole block
-   swaying out of the page's plane; still, at a slant, under reduced motion; flat while you edit them */
-.x3d { perspective: 60rem; perspective-origin: 50% 40%; }
-.x3d-spin { position: relative; transform-style: preserve-3d; transform: rotateY(-24deg) rotateX(8deg); }
-.x3d-layer { position: absolute; left: 0; top: 0; white-space: pre-wrap; pointer-events: none; user-select: none; }
-.t-lead .x3d-layer { text-align: inherit; }
-@media (prefers-reduced-motion: no-preference) {
-  .x3d-spin { animation: x3d-sway 11s ease-in-out infinite alternate; }
-  @keyframes x3d-sway { 0% { transform: rotateY(-34deg) rotateX(10deg); } 50% { transform: rotateY(4deg) rotateX(-2deg); } 100% { transform: rotateY(34deg) rotateX(9deg); } }
-}
-.editing .x3d-spin { animation: none; transform: none; }
-.editing .x3d-layer { display: none; }   /* a word a line */
+.intro { margin: 0; font: 700 clamp(1.4rem, 3vw, 2rem)/1.1 var(--display); letter-spacing: -0.03em; color: var(--ink); }
+/* the words are drawn in the drawing (from this text); the text itself shows only while you edit it */
+.t-lead { display: none; }
+.editing .t-lead { display: grid; }   /* a word a line */
 .t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
 /* the boot: dots print left to right, then the dimensions draw */
 @media (prefers-reduced-motion: no-preference) {
@@ -168,12 +155,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .dot { transform-box: fill-box; transform-origin: center; }
 
 /* the model list: a parts list, one row per model, each row going to its sheet */
-@media (min-width: 60rem) {
-  .t-top { display: flex; justify-content: center; gap: clamp(2.5rem, 5vw, 5.5rem); }
-  .t-mark { flex: none; width: min(61%, (100vh - 9rem) * 1.63); width: min(61%, (100svh - 9rem) * 1.63); }
-  .t-lead { flex: none; }
-}
-@media (max-width: 59.99rem) { .t-lead { justify-items: center; text-align: center; } }
 @media (max-height: 640px) { .t-sub { display: none; } }
 /* ---- a model's datasheet: what it is and its specification, beside a figure of it working */
 .p-body { display: grid; gap: clamp(1.25rem, 4vh, 2.5rem); align-items: center; }
@@ -319,7 +300,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       <div class="t-top">
       <div class="t-mark"><svg class="mn-big" aria-hidden="true"></svg></div>
       <div class="t-lead">
-        <div class="x3d"><div class="x3d-spin"><p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p></div></div>
+        <p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p>
         <p class="t-sub" data-slot="site.tagline" data-hint="A line under it, if you want one"></p>
       </div>
       </div>
@@ -503,26 +484,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   };
 
   // ---- show the text: what you wrote, or (while editing) a hint where nothing is written yet
-  // ---- the index's words, extruded: LAYERS copies behind them, each a little further back and a little darker, kept in step
-  // with the words (your text, and as you edit it)
-  (function extrude() {
-    const front = document.querySelector(".x3d .intro");
-    if (!front) return;
-    const LAYERS = 28, DEPTH = 0.24;                                   // the depth, in em
-    const layers = [];
-    for (let k = LAYERS; k >= 1; k--) {
-      const l = document.createElement("span");
-      l.className = "x3d-layer"; l.setAttribute("aria-hidden", "true");
-      const u = k / LAYERS;                                            // 0 at the front, 1 at the back
-      l.style.transform = `translateZ(${(-u * DEPTH).toFixed(4)}em)`;
-      l.style.color = `rgb(${[0x8E, 0x94, 0x9B].map((c, j) => Math.round(c + ([0x2B, 0x2E, 0x33][j] - c) * u)).join(",")})`;
-      front.before(l); layers.push(l);
-    }
-    const copy = () => { for (const l of layers) l.textContent = front.textContent; };
-    copy();
-    new MutationObserver(copy).observe(front, { childList: true, characterData: true, subtree: true });
-  })();
-
   function render() {
     if (!content) return;
     for (const el of slots) {
@@ -665,15 +626,25 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // the index's large mark: mn as an engineering drawing on its own sheet. A zoned border and a title block (titled
     // MODEL NUMBER); a front view with a faint construction grid at the dot pitch, dash-dot centre lines, top and base
     // reference lines, chain and overall dimensions, a callout for the holes and a position tolerance to datums A and B;
-    // and a side view of the plate, its thickness dimensioned and the holes through it as hidden lines. Units are dot
-    // pitches (p).
+    // and, beside it, the words (the index's text, a word to a row), their rows together exactly as tall as the mark,
+    // from its top line to its base, extruded. Units are dot pitches (p).
     let bigDrawn = false;
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      const W = 14, SX = W + 2.6, T = 1, O = { x0: -2.6, y0: -2.6, x1: SX + T + 1.4, y1: 10.6 }, IN = 0.45;   // SX, T: the side view's left edge, the plate's thickness
+      // the words: a word to a row, sized so the first row's ascenders meet the top line and the last row's descenders
+      // the base (Heros: ascenders 0.75 em above the baseline, descenders 0.21 below, rows 1 em apart); measured in the
+      // drawing itself, so the sheet ends just past the widest row
+      const words = (document.querySelector(".t-lead .intro")?.textContent || "").trim().split(/\s+/).filter(Boolean);
+      const W = 14, TX = W + 2.6, FS = 6 / (0.96 + Math.max(words.length - 1, 0)), ASC = 0.75 * FS;
+      const probe = svgEl("text", { class: "aed", style: `font-size: ${f(FS)}px` });   // inline, over .t-mark text's size
+      svg.append(probe);
+      const tw = Math.max(0, ...words.map((wd) => { probe.textContent = wd; return probe.getComputedTextLength(); }));
+      probe.remove();
+      const O = { x0: -2.6, y0: -2.6, x1: Math.max(W + 2.6, TX + tw + 1.9), y1: 10.6 }, IN = 0.45;
       svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
+      host.style.setProperty("--aspect", ((O.x1 - O.x0 + 0.2) / (O.y1 - O.y0 + 0.2)).toFixed(3));
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
       const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
@@ -717,8 +688,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       for (let y = 0; y <= 7; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");             // centre lines: the m, the n, and across
       line(-0.7, 3, W + 0.7, 3, "cl fine-l");
-      line(-1.9, 0, SX + T + 0.4, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");   // reference lines, named above their left ends,
-      line(-1.9, 6, SX + T + 0.4, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");   // run across both views
+      line(-1.9, 0, W + 0.3, 0, "ref fine-l"); text(-1.9, -0.1, "TOP", "fine");        // reference lines, named above their left ends
+      line(-1.9, 6, W + 0.3, 6, "ref fine-l"); text(-1.9, 5.9, "BASE", "fine");
       for (const [a, b, label] of [[0, 8, "8"], [9, 14, "5"]]) {                      // chain dimensions: the m and the n
         line(a, -0.2, a, -1.35); line(b, -0.2, b, -1.35);
         hdim(a, b, -1.1, label);
@@ -744,15 +715,21 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       datum(2.5, 6, 2.5, 6.75, "A", true);
       datum(0.05, 2.5, -1.5, 2.2, "B", false);
 
-      // ---- the side view, to the right: the plate edge-on, a row of holes through it at each dot row
-      el("rect", { x: SX, y: 0, width: T, height: 6, class: "edge" });
-      for (let r = 0; r < 6; r++) {
-        line(SX, r + 0.05, SX + T, r + 0.05, "hid"); line(SX, r + 0.95, SX + T, r + 0.95, "hid");   // the hole's walls, hidden
-        line(SX - 0.35, r + 0.5, SX + T + 0.35, r + 0.5, "cl fine-l");                             // its axis
-      }
-      line(SX, -0.2, SX, -1.35); line(SX + T, -0.2, SX + T, -1.35);                             // the thickness, above
-      hdim(SX, SX + T, -1.1, "1 p");
-      text(SX + T / 2, 6.8, "SIDE", "view-tag", { "text-anchor": "middle" });
+
+      // ---- the words, beside the mark: each row extruded, copies stepping down and to the right behind it, darker
+      // towards the back, then the face
+      const aed = svgEl("g", { class: "aed-g" });
+      const DEPTH = 14, STEP = 0.016;
+      words.forEach((wd, i) => {
+        const y = ASC + i * FS;
+        for (let k = DEPTH; k >= 0; k--) {
+          const t = svgEl("text", { x: f(TX + k * STEP), y: f(y + k * STEP), class: k ? "aed aed-side" : "aed", style: `font-size: ${f(FS)}px` });
+          if (k) t.style.setProperty("--k", (k / DEPTH).toFixed(3));
+          t.textContent = wd;
+          aed.append(t);
+        }
+      });
+      sheet.append(aed);
 
       svg.append(sheet);
       // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark
@@ -804,6 +781,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       : Promise.resolve();
     drawMarks(); drawBig();                                            // at once in the fallback face, then again in Heros Cn
     fontReady.then(() => { drawMarks(); drawBig(); fitDemos(); });
+    const words = document.querySelector(".t-lead .intro");
+    if (words) new MutationObserver(() => drawBig()).observe(words, { childList: true, characterData: true, subtree: true });
 
     // ---- the sheet index at the side and the title block at the foot
     const scale = document.querySelector(".index-scale");
@@ -827,7 +806,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const s = slides[index];
       marks.forEach((b, i) => (i === index ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")));
       document.body.classList.toggle("inv-on", s.classList.contains("inv"));
-      document.body.classList.toggle("home-on", index === 0 && !openId);   // the home sheet has no title block
       fName.textContent = openId === "about" ? "About" : s.dataset.name + (openId ? " · Details" : "");
       fPage.textContent = `${pad2(index)} / ${pad2(slides.length - 1)}`;
       fPrev.disabled = index === 0 || !!openId; fNext.disabled = index === slides.length - 1 || !!openId;

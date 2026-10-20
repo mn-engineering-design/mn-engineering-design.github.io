@@ -110,10 +110,12 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 /* ---- sheet 00: the index */
 .t-grid { display: grid; gap: clamp(1rem, 3.5vh, 2.25rem); max-width: none; }          /* the index runs the full width of the page */
+.t-top { display: grid; gap: clamp(1.25rem, 3.5vh, 2.25rem); align-items: center; min-width: 0; }
 .t-under { display: grid; gap: clamp(1rem, 3vh, 2rem); align-items: start; min-width: 0; }
 .t-lead { display: grid; gap: clamp(0.75rem, 2.5vh, 1.5rem); justify-items: start; min-width: 0; }
-/* the drawing spans the page; on short screens it narrows to leave room for the projects under it (the sheet is 33.4 x 13.4) */
-.t-mark { justify-self: center; width: min(100%, (100vh - 24rem) * 2.49); width: min(100%, (100svh - 24rem) * 2.49); }
+/* the drawing, with the words beside it on a wide screen; on short screens it narrows to leave room for the projects under
+   it (the sheet is 19.4 x 13.4) */
+.t-mark { justify-self: center; width: min(100%, (100vh - 22rem) * 1.45); width: min(100%, (100svh - 22rem) * 1.45); }
 .t-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
 .t-mark .dot, .t-mark .word { fill: var(--ink); }
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.03; }
@@ -126,19 +128,16 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark text { fill: var(--muted); font: 500 0.36px var(--mono); letter-spacing: 0.02px; }
 .t-mark .lbl { fill: var(--ink-2); font-size: 0.46px; }
 .t-mark .callout { fill: var(--ink-2); font-size: 0.4px; }
-.t-mark .zone { font-size: 0.3px; }
 .t-mark .tb-name { fill: var(--ink); font: 700 0.62px var(--display); letter-spacing: -0.01px; }
 .t-mark .tb-key { font-size: 0.24px; letter-spacing: 0.03px; }
 .t-mark .tb-val { fill: var(--ink-2); font-size: 0.36px; font-weight: 600; }
 .t-mark .tb-title { fill: var(--ink); font-size: 0.42px; letter-spacing: 0.06px; }
-.t-mark .detail-tag { fill: var(--ink-2); font-size: 0.4px; font-weight: 600; letter-spacing: 0.04px; }
 .t-mark .hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.055; }   /* holes: a visible outline, heavier than the dimensions */
 .t-mark .cm { stroke: var(--ink-2); stroke-width: 0.018; fill: none; }          /* centre marks */
-.t-mark .fcf { fill: var(--ink); font-size: 0.36px; font-weight: 600; }        /* feature control frame and datum letters */
 /* a small drawing (under 40rem across, set by script): the main dimensions only, larger */
-.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .fcf, .t-mark.compact .tb-key { display: none; }
-.t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; } .t-mark.compact .detail-tag { font-size: 0.6px; }
-.intro { margin: 0; max-width: 24ch; font: 400 clamp(1.4rem, 3.4vw, 2.3rem)/1.15 var(--display); letter-spacing: -0.02em; color: var(--ink); }
+.t-mark.compact .fine, .t-mark.compact .fine-l, .t-mark.compact .callout, .t-mark.compact .tb-key { display: none; }
+.t-mark.compact .lbl { font-size: 0.8px; } .t-mark.compact .tb-name { font-size: 0.75px; } .t-mark.compact .tb-title { font-size: 0.55px; }
+.intro { margin: 0; width: min-content; font: 400 clamp(2.2rem, 5.6vw, 4.6rem)/1.02 var(--display); letter-spacing: -0.03em; color: var(--ink); }   /* a word a line */
 .t-sub { margin: 0; max-width: 44ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
 /* the boot: dots print left to right, then the dimensions draw */
 @media (prefers-reduced-motion: no-preference) {
@@ -160,7 +159,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .models .type { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
 .models .go { width: 1rem; height: 1rem; color: var(--muted); transition: transform 0.2s ease, color 0.2s ease; }
 .models a:hover .go { transform: translateX(3px); color: var(--ink); }
-@media (min-width: 60rem) { .t-under { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(2.5rem, 6vw, 5rem); } }
+@media (min-width: 60rem) { .t-top { grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: clamp(2.5rem, 5vw, 4.5rem); } .t-mark { justify-self: start; } }
 @media (max-width: 30rem) { .models .type, .models-head span:nth-child(2) { display: none; } .models-head, .models a { grid-template-columns: minmax(0, 1fr) 1rem; } }
 @media (max-height: 640px) { .t-sub { display: none; } .models a { padding: 0.6rem 0; } }
 
@@ -263,6 +262,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 /* ---- your text */
 [data-slot] { white-space: pre-wrap; overflow-wrap: anywhere; }
+.intro[data-slot] { overflow-wrap: normal; }                       /* the index's words: one to a line, never split */
 .editing [data-slot] { outline: 1px dashed var(--accent); outline-offset: 4px; cursor: text; }
 .editing [data-slot]:focus { background: rgba(31, 90, 166, 0.06); outline-style: solid; }
 .editing [data-slot].empty::before { content: attr(data-hint); color: var(--muted); font-style: italic; pointer-events: none; }
@@ -304,12 +304,14 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   <section class="slide" data-id="" data-name="Index" aria-labelledby="name-mn">
     <div class="wrap t-grid">
       <h1 class="sr-only" id="name-mn">mn &middot; model number</h1>
+      <div class="t-top">
       <div class="t-mark"><svg class="mn-big" aria-hidden="true"></svg></div>
-      <div class="t-under">
       <div class="t-lead">
         <p class="intro" data-slot="site.intro" data-hint="What spcmn does, in a few words"></p>
         <p class="t-sub" data-slot="site.tagline" data-hint="A line under it, if you want one"></p>
       </div>
+      </div>
+      <div class="t-under">
       <div class="models" role="navigation" aria-label="Projects">
         <div class="models-head label"><span>Project</span><span>Type</span><span></span></div>
         <ol>
@@ -637,7 +639,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     const small = document.querySelector(".mn-small");
     small.setAttribute("viewBox", "0 0 14 6"); dots(small);
 
-    // the index's large mark: mn as an engineering drawing on its own sheet. A zoned border and a title block (titled
+    // the index's large mark: mn as an engineering drawing on its own sheet. A double border and a title block (titled
     // MODEL NUMBER); a faint construction grid at the dot pitch; dash-dot centre lines; top and base reference lines;
     // chain dimensions for the m and the n, overall dimensions and a callout for the dots. Units are dot pitches (p).
     let bigDrawn = false;
@@ -645,7 +647,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      const W = 14, O = { x0: -2.6, y0: -2.6, x1: 30.6, y1: 10.6 }, IN = 0.45;
+      const W = 14, O = { x0: -2.6, y0: -2.6, x1: 16.6, y1: 10.6 }, IN = 0.45;
       svg.setAttribute("viewBox", `${f(O.x0 - 0.1)} ${f(O.y0 - 0.1)} ${f(O.x1 - O.x0 + 0.2)} ${f(O.y1 - O.y0 + 0.2)}`);
       const sheet = svgEl("g", { class: "dims" });
       const el = (tag, attrs, parent = sheet) => { const e = svgEl(tag, attrs); parent.append(e); return e; };
@@ -658,22 +660,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
         text(tx, (ya + yb) / 2, label, cls, { "text-anchor": "middle", transform: `rotate(90 ${f(tx)} ${f((ya + yb) / 2)})` });
       };
 
-      // the sheet: border, zone band with 8 zones across and A to C down
+      // the sheet: a double border
       el("rect", { x: O.x0, y: O.y0, width: f(O.x1 - O.x0), height: f(O.y1 - O.y0), class: "frame-out" });
       el("rect", { x: O.x0 + IN, y: O.y0 + IN, width: f(O.x1 - O.x0 - 2 * IN), height: f(O.y1 - O.y0 - 2 * IN), class: "frame" });
-      const zw = (O.x1 - O.x0) / 8, zh = (O.y1 - O.y0) / 3;
-      for (let z = 0; z < 8; z++) {
-        const x = O.x0 + z * zw;
-        if (z) { line(x, O.y0, x, O.y0 + IN, "frame fine-l"); line(x, O.y1 - IN, x, O.y1, "frame fine-l"); }
-        text(x + zw / 2, O.y0 + 0.33, String(z + 1), "zone fine", { "text-anchor": "middle" });
-        text(x + zw / 2, O.y1 - 0.12, String(z + 1), "zone fine", { "text-anchor": "middle" });
-      }
-      for (let z = 0; z < 3; z++) {
-        const y = O.y0 + z * zh;
-        if (z) { line(O.x0, y, O.x0 + IN, y, "frame fine-l"); line(O.x1 - IN, y, O.x1, y, "frame fine-l"); }
-        text(O.x0 + IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
-        text(O.x1 - IN / 2, y + zh / 2 + 0.1, "ABC"[z], "zone fine", { "text-anchor": "middle" });
-      }
       // the title block, bottom right: the part, its title, drawing number and revision
       const tb = { x1: O.x1 - IN, y1: O.y1 - IN }; tb.x0 = tb.x1 - 13.2; tb.y0 = tb.y1 - 1.05;
       const c1 = tb.x0 + 2.4, c2 = tb.x0 + 8.4, c3 = tb.x0 + 11.2;
@@ -683,14 +672,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       text(c1 + 0.25, tb.y0 + 0.33, "TITLE", "tb-key fine"); text(c1 + 0.25, tb.y1 - 0.2, "MODEL NUMBER", "tb-val tb-title");
       text(c2 + 0.25, tb.y0 + 0.33, "DWG NO.", "tb-key fine"); text(c2 + 0.25, tb.y1 - 0.2, "MN-000", "tb-val fine");
       text(c3 + 0.25, tb.y0 + 0.33, "REV", "tb-key fine"); text(c3 + 0.25, tb.y1 - 0.2, "C", "tb-val fine");
-      text(7, 9.35, "FRONT VIEW", "detail-tag", { "text-anchor": "middle" });
-      text(O.x0 + IN + 0.3, O.y1 - IN - 0.3, "NOTES: 1. UNITS p = DOT PITCH.  2. HOLES THRU.  3. TOL ±0.05 U.N.O.", "fine");
-      // third-angle projection: a truncated cone's side view, then its end view
-      const px0 = tb.x0 + 0.2, py0 = tb.y0 - 0.95;
-      el("path", { d: `M${px0},${py0 + 0.2} L${px0 + 1.0},${py0} L${px0 + 1.0},${py0 + 0.8} L${px0},${py0 + 0.6} Z`, class: "frame" });
-      el("circle", { cx: px0 + 1.75, cy: py0 + 0.4, r: 0.4, class: "frame" }); el("circle", { cx: px0 + 1.75, cy: py0 + 0.4, r: 0.2, class: "frame" });
-      text(px0 + 2.45, py0 + 0.52, "THIRD ANGLE PROJECTION", "tb-key");
-      text(tb.x1, py0 + 0.52, "SCALE 1:1 · SHEET 1 OF 1", "tb-key", { "text-anchor": "end" });
 
       // ---- the front view: mn
       const grid = el("g", { class: "grid-l fine-l" });
@@ -708,21 +689,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       vdim(0, 6, W + 0.75, "6 p", "lbl", W + 1.2);
       line(0, 6.25, 0, 8.65); line(W, 6.25, W, 8.65);                                 // overall width, below
       hdim(0, W, 8.4, "14 p", "lbl", 8.2);
-      // the holes: a callout from the m's last hole, a tolerance, and a position tolerance to datums A and B
+      // the holes: a callout from the m's last hole
       line(7.82, 5.82, 8.5, 6.85); line(8.5, 6.85, 8.95, 6.85);
       text(9.05, 6.97, `${MN.length}× Ø 0.90 ±0.02 THRU`, "callout");
-      const fcf = [[9.05, "⌖"], [9.75, "Ø 0.05"], [11.6, "A"], [12.2, "B"]], fy = 7.18, fh = 0.6;
-      el("rect", { x: 9.05, y: fy, width: 3.75, height: fh, class: "frame" });
-      for (const [x, str] of fcf) { if (x > 9.05) line(x, fy, x, fy + fh, "frame"); text(x + (x === 9.05 ? 0.35 : 0.3), fy + 0.43, str, "fcf", x === 9.05 ? { "text-anchor": "middle" } : {}); }
-      // datum A: the base; datum B: the m's left edge
-      const datum = (x, y, tx, ty, letter, vertical) => {
-        el("path", { d: vertical ? `M${x - 0.18},${y} L${x + 0.18},${y} L${x},${y + 0.3} Z` : `M${x},${y - 0.18} L${x},${y + 0.18} L${x - 0.3},${y} Z`, class: "dim-head" });
-        line(vertical ? x : x - 0.3, vertical ? y + 0.3 : y, tx + (vertical ? 0 : 0.5), ty + (vertical ? 0 : 0.3));
-        el("rect", { x: tx - (vertical ? 0.3 : 0), y: ty, width: 0.6, height: 0.6, class: "frame" });
-        text(tx + (vertical ? 0 : 0.3), ty + 0.44, letter, "fcf", { "text-anchor": "middle" });
-      };
-      datum(2.5, 6, 2.5, 6.75, "A", true);
-      datum(0.05, 2.5, -1.5, 2.2, "B", false);
 
       svg.append(sheet);
       // the mn's 62 holes, drawn as a drawing shows them: an outline with a centre mark

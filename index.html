@@ -124,6 +124,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .frame-out { fill: none; stroke: var(--ink-2); stroke-width: 0.06; }
 .t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
 .t-mark .zone { font-size: 0.3px; }
+.t-mark .tb-box { fill: var(--paper); }
 .t-mark .grid-l line { stroke: #CFCDC6; stroke-width: 0.03; }   /* a warm grey on the paper */
 .t-mark .tb-title { fill: var(--charcoal); font: 700 0.62px var(--display); letter-spacing: -0.03em; }   /* as the words: Heros Bold */
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
@@ -657,6 +658,13 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const head = (k, x, y, ang) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head dim-mark", style: turn(k), transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
       const label = (k, x, y, str, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl dim-mark", style: turn(k), ...attrs }); t.textContent = str; return t; };
 
+      // ---- a faint construction grid at the dot pitch, in step with the mark, over the whole sheet inside its border
+      // (first, so everything else is drawn over it)
+      const grid = el("g", { class: "grid-l" });
+      const gx0 = Math.ceil(S.x0 + IN), gx1 = Math.floor(S.x1 - IN), gy0 = Math.ceil(S.y0 + IN), gy1 = Math.floor(S.y1 - IN);
+      for (let x = gx0; x <= gx1; x++) el("line", { x1: x, y1: f(S.y0 + IN), x2: x, y2: f(S.y1 - IN) }, grid);
+      for (let y = gy0; y <= gy1; y++) el("line", { x1: f(S.x0 + IN), y1: y, x2: f(S.x1 - IN), y2: y }, grid);
+
       // ---- the sheet: a double border, and the title block in its bottom right corner: one box, "model number"
       el("rect", { x: f(S.x0), y: f(S.y0), width: f(S.x1 - S.x0), height: f(S.y1 - S.y0), class: "frame-out" });
       el("rect", { x: f(S.x0 + IN), y: f(S.y0 + IN), width: f(S.x1 - S.x0 - 2 * IN), height: f(S.y1 - S.y0 - 2 * IN), class: "frame" });
@@ -677,16 +685,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       title.textContent = "model number";
       const tbw = title.getComputedTextLength ? (svg.append(sheet), title.getComputedTextLength()) : 5;
       const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - tbw - 0.9; tb.y0 = tb.y1 - 1.05;
-      el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame" });
+      el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame tb-box" });   // paper inside: the grid stops at it
       // centred in its box: across by its middle; down by its letters (ascenders 0.734 em above the baseline, none below)
       title.setAttribute("x", f((tb.x0 + tb.x1) / 2)); title.setAttribute("text-anchor", "middle");
       title.setAttribute("y", f((tb.y0 + tb.y1) / 2 + 0.367 * 0.62));
       sheet.append(title);
-
-      // ---- a faint construction grid at the dot pitch, behind the mark
-      const grid = el("g", { class: "grid-l" });
-      for (let x = 0; x <= W; x++) el("line", { x1: x, y1: 0, x2: x, y2: 6 }, grid);
-      for (let y = 0; y <= 6; y++) el("line", { x1: 0, y1: y, x2: W, y2: y }, grid);
 
       // ---- the mark's centre lines: the m, the n, and across
       for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");

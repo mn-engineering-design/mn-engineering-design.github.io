@@ -733,7 +733,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       label(2, kx - 0.6, ky + 0.17, "\u00D8 0.9", { "text-anchor": "end" });
 
       // ---- the words, under the sheet, one line, as wide as the sheet
-      if (line1) { const t = el("text", { x: f(S.x0), y: f(wordsY), class: "aed intro-wipe", style: `font-size: ${f(fs)}px; ${at(5.9, 0.9)}` }); t.textContent = line1; }
+      // placed by their middle, on the sheet's (and so the page's) centre, so they stay centred whatever a browser makes
+      // of their measured width
+      if (line1) { const t = el("text", { x: f((S.x0 + S.x1) / 2), y: f(wordsY), "text-anchor": "middle", class: "aed intro-wipe", style: `font-size: ${f(fs)}px; ${at(5.9, 0.9)}` }); t.textContent = line1; }
 
       svg.append(sheet);
       // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1; put in from 2.9 s, a column at a time from

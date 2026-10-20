@@ -705,12 +705,12 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       stroke(1, "line", [[W + 1.2, 0], [W + 1.2, 6]]);
       head(1, W + 1.2, 0, -90); head(1, W + 1.2, 6, 90);
       label(1, W + 1.5, 3.2, "6");
-      // ---- 3. one dot's diameter: an arrow up from the lower right to the bottom dot of the m's right-hand stroke
-      const ex = 7.5 + 0.45 * Math.SQRT1_2, ey = 5.5 + 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
-      const kx = 8.6, ky = 6.95;                                                      // the leader's knee, under the gap
-      stroke(2, "line", [[kx + 0.5, ky], [kx, ky], [ex, ey]]);
+      // ---- 3. one dot's diameter: an arrow up from the lower left to the bottom left dot of the m's right-hand stroke
+      const ex = 6.5 - 0.45 * Math.SQRT1_2, ey = 5.5 + 0.45 * Math.SQRT1_2;        // where the arrow meets the dot
+      const kx = 5.4, ky = 6.95;                                                      // the leader's knee, below and to the left
+      stroke(2, "line", [[kx - 0.5, ky], [kx, ky], [ex, ey]]);
       head(2, ex, ey, Math.atan2(ey - ky, ex - kx) * 180 / Math.PI);
-      label(2, kx + 0.6, ky + 0.17, "\u00D8 0.9");
+      label(2, kx - 0.6, ky + 0.17, "\u00D8 0.9", { "text-anchor": "end" });
 
       // ---- the words, under the sheet, one line, as wide as the sheet
       if (line1) { const t = el("text", { x: f(S.x0), y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }

@@ -125,7 +125,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .t-mark .frame { fill: none; stroke: var(--ink-2); stroke-width: 0.035; }
 .t-mark .zone { font-size: 0.3px; }
 .t-mark .tb-box { fill: var(--paper); }
-.t-mark .grid-l line { stroke: #CFCDC6; stroke-width: 0.03; }   /* a warm grey on the paper */
+.t-mark .grid-l path { fill: none; stroke: #CFCDC6; stroke-width: 0.03; }   /* a warm grey on the paper */
 .t-mark .tb-title { fill: var(--charcoal); font: 700 0.62px var(--display); letter-spacing: -0.03em; }   /* as the words: Heros Bold */
 .t-mark .dim { fill: none; stroke: var(--muted); stroke-width: 0.035; }
 .t-mark .dim-head { fill: var(--muted); stroke: none; }
@@ -139,6 +139,18 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   .t-mark .dim-line { animation: dim-line 10.5s linear calc(var(--d) - var(--el, 0s)) infinite both; }
   .t-mark .dim-mark { animation: dim-mark 10.5s linear calc(var(--d) - var(--el, 0s)) infinite both; }
 }
+/* the opening (once, --t its start, --dur its length): lines draw out, marks fade or are written in left to right, dots
+   pop in; under reduced motion everything is simply there */
+@media (prefers-reduced-motion: no-preference) {
+  .t-mark .intro-draw { stroke-dasharray: 1; animation: intro-draw var(--dur, 0.5s) ease-in-out calc(var(--t) - var(--el, 0s)) both; }
+  .t-mark .intro-fade { animation: intro-fade 0.5s ease-out calc(var(--t) - var(--el, 0s)) both; }
+  .t-mark .intro-wipe { animation: intro-wipe var(--dur, 0.7s) linear calc(var(--t) - var(--el, 0s)) both; }
+  .t-mark .intro-dot { transform-box: fill-box; transform-origin: center; animation: intro-dot 0.25s ease-out calc(var(--t) - var(--el, 0s)) both; }
+}
+@keyframes intro-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes intro-fade { from { opacity: 0; } }
+@keyframes intro-wipe { from { clip-path: inset(-30% 100% -30% 0); } to { clip-path: inset(-30% 0 -30% 0); } }
+@keyframes intro-dot { from { opacity: 0; transform: scale(0.3); } }
 @keyframes dim-ext { 0% { stroke-dashoffset: 1; opacity: 1; } 3% { stroke-dashoffset: 0; } 27% { opacity: 1; } 31%, 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes dim-line { 0%, 3% { stroke-dashoffset: 1; opacity: 1; } 10% { stroke-dashoffset: 0; } 27% { opacity: 1; } 31%, 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes dim-mark { 0%, 10% { opacity: 0; } 13%, 27% { opacity: 1; } 31%, 100% { opacity: 0; } }
@@ -626,13 +638,17 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     // round and round: the width in dots across the top, the height in dots down the right, and an arrow to one dot giving
     // its diameter; a double border round them, with a title block ("model number") in its bottom right corner; and under
     // the sheet the words (the index's text) on one line, sized to run exactly the sheet's width. Units are dot pitches.
+    // When the page opens the drawing is drawn, once, onto an empty sheet (only its border showing): the title box and
+    // "model number", then the grid and the centre lines, then the dots (column by column from the left, each from the
+    // bottom up), then the words under it; from INTRO on it stays still and only the dimensions take their turns.
     const SLOT = 3.5;                                                  // seconds per dimension: the CSS cycle is 3 slots
+    const INTRO = 7.0;                                                 // seconds before the dimensions start
     let firstDrawn = 0;
     function drawBig() {
       const svg = document.querySelector(".mn-big");
       const host = svg.parentElement;
       svg.replaceChildren();
-      // a redraw (the fonts arriving, your text arriving) carries on the dimensions' cycle where it had got to
+      // a redraw (the fonts arriving, your text arriving) carries on the drawing and the dimensions where they had got to
       if (!firstDrawn) firstDrawn = performance.now();
       host.style.setProperty("--el", ((performance.now() - firstDrawn) / 1000).toFixed(2) + "s");
       // the words on one line, measured in the drawing itself, then sized to the mark's width (W)
@@ -653,17 +669,20 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const line = (x1, y1, x2, y2, cls = "dim") => el("line", { x1: f(x1), y1: f(y1), x2: f(x2), y2: f(y2), class: cls });
       // each dimension (k: 0, 1, 2) has its slot of the cycle: its extension lines draw out, then its dimension line,
       // then its arrowheads and number appear; all hold, then fade (the timings are the CSS keyframes, dim-*)
-      const turn = (k) => `--d: ${k * SLOT}s`;
+      const turn = (k) => `--d: ${INTRO + k * SLOT}s`;
+      // the opening: a line drawn out from its start, or a mark faded or written in, from t seconds, over dur
+      const at = (t, dur) => `--t: ${t.toFixed(2)}s` + (dur ? `; --dur: ${dur}s` : "");
+      const pathD = (pts) => "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L");
       const stroke = (k, part, pts) => el("path", { d: "M" + pts.map(([x, y]) => `${f(x)},${f(y)}`).join("L"), pathLength: 1, class: `dim dim-${part}`, style: turn(k) });
       const head = (k, x, y, ang) => el("path", { d: "M0,0 L-0.34,-0.1 L-0.34,0.1 Z", class: "dim-head dim-mark", style: turn(k), transform: `translate(${f(x)} ${f(y)}) rotate(${ang})` });
       const label = (k, x, y, str, attrs = {}) => { const t = el("text", { x: f(x), y: f(y), class: "lbl dim-mark", style: turn(k), ...attrs }); t.textContent = str; return t; };
 
       // ---- a faint construction grid at the dot pitch, in step with the mark, over the whole sheet inside its border
-      // (first, so everything else is drawn over it)
+      // (first, so everything else is drawn over it); drawn in from 1.6 s: down, left to right, then across, top to bottom
       const grid = el("g", { class: "grid-l" });
       const gx0 = Math.ceil(S.x0 + IN), gx1 = Math.floor(S.x1 - IN), gy0 = Math.ceil(S.y0 + IN), gy1 = Math.floor(S.y1 - IN);
-      for (let x = gx0; x <= gx1; x++) el("line", { x1: x, y1: f(S.y0 + IN), x2: x, y2: f(S.y1 - IN) }, grid);
-      for (let y = gy0; y <= gy1; y++) el("line", { x1: f(S.x0 + IN), y1: y, x2: f(S.x1 - IN), y2: y }, grid);
+      for (let x = gx0; x <= gx1; x++) el("path", { d: pathD([[x, S.y0 + IN], [x, S.y1 - IN]]), pathLength: 1, class: "intro-draw", style: at(1.6 + (x - gx0) * 0.03, 0.45) }, grid);
+      for (let y = gy0; y <= gy1; y++) el("path", { d: pathD([[S.x0 + IN, y], [S.x1 - IN, y]]), pathLength: 1, class: "intro-draw", style: at(2.0 + (y - gy0) * 0.03, 0.6) }, grid);
 
       // ---- the sheet: a double border, and the title block in its bottom right corner: one box, "model number"
       el("rect", { x: f(S.x0), y: f(S.y0), width: f(S.x1 - S.x0), height: f(S.y1 - S.y0), class: "frame-out" });
@@ -685,15 +704,16 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       title.textContent = "model number";
       const tbw = title.getComputedTextLength ? (svg.append(sheet), title.getComputedTextLength()) : 5;
       const tb = { x1: S.x1 - IN, y1: S.y1 - IN }; tb.x0 = tb.x1 - tbw - 0.9; tb.y0 = tb.y1 - 1.05;
-      el("rect", { x: f(tb.x0), y: f(tb.y0), width: f(tb.x1 - tb.x0), height: f(tb.y1 - tb.y0), class: "frame tb-box" });   // paper inside: the grid stops at it
+      el("path", { d: pathD([[tb.x0, tb.y0], [tb.x1, tb.y0], [tb.x1, tb.y1], [tb.x0, tb.y1]]) + "Z", pathLength: 1, class: "frame tb-box intro-draw", style: at(0.3, 0.6) });   // paper inside: the grid stops at it
       // centred in its box: across by its middle; down by its letters (ascenders 0.734 em above the baseline, none below)
       title.setAttribute("x", f((tb.x0 + tb.x1) / 2)); title.setAttribute("text-anchor", "middle");
       title.setAttribute("y", f((tb.y0 + tb.y1) / 2 + 0.367 * 0.62));
+      title.setAttribute("class", "tb-title intro-wipe"); title.setAttribute("style", at(0.9, 0.7));
       sheet.append(title);
 
       // ---- the mark's centre lines: the m, the n, and across
-      for (const cx of [4, 11.5]) line(cx, -0.55, cx, 6.55, "cl fine-l");
-      line(-0.7, 3, W + 0.7, 3, "cl fine-l");
+      for (const cx of [4, 11.5]) el("path", { d: pathD([[cx, -0.55], [cx, 6.55]]), class: "cl fine-l intro-fade", style: at(2.6) });
+      el("path", { d: pathD([[-0.7, 3], [W + 0.7, 3]]), class: "cl fine-l intro-fade", style: at(2.6) });
 
       // ---- 1. the width, across the top: 14 dots
       stroke(0, "ext", [[0, -0.25], [0, -1.5]]); stroke(0, "ext", [[W, -0.25], [W, -1.5]]);
@@ -713,15 +733,15 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       label(2, kx - 0.6, ky + 0.17, "\u00D8 0.9", { "text-anchor": "end" });
 
       // ---- the words, under the sheet, one line, as wide as the sheet
-      if (line1) { const t = el("text", { x: f(S.x0), y: f(wordsY), class: "aed", style: `font-size: ${f(fs)}px` }); t.textContent = line1; }
+      if (line1) { const t = el("text", { x: f(S.x0), y: f(wordsY), class: "aed intro-wipe", style: `font-size: ${f(fs)}px; ${at(5.9, 0.9)}` }); t.textContent = line1; }
 
       svg.append(sheet);
-      // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1
+      // the mn's 62 dots, solid, as in the logo: 0.9 across on a pitch of 1; put in from 2.9 s, a column at a time from
+      // the left, each from the bottom up
       const holes = svgEl("g", { class: "holes" });
-      for (const d of MN) {
-        const c = svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole" });
-        holes.append(c);
-      }
+      [...MN].sort((a, b) => a.x - b.x || b.y - a.y).forEach((d, i) => {
+        holes.append(svgEl("circle", { cx: d.x, cy: d.y, r: 0.45, class: "dot hole intro-dot", style: at(2.9 + i * 0.045) }));
+      });
       svg.append(holes);
       const compact = () => host.classList.toggle("compact", host.clientWidth < 640);
       compact();

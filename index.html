@@ -13,7 +13,7 @@
   --ink: #15171A;        /* text, marks, filled buttons */
   --ink-2: #3B3F45;      /* secondary text */
   --charcoal: #2E2E33;   /* the brand's charcoal: the index's mark and words */
-  --muted: #6B7077;      /* labels, dimensions, placeholders */
+  --muted: #5E636A;      /* labels, dimensions, placeholders: 5.4:1 on the paper, so small mono labels stay legible */
   --rule: #C6CACE;       /* structural rules */
   --hair: #DFE1E3;       /* row rules */
   --accent: #1F5AA6;     /* where you are, and focus */
@@ -31,6 +31,11 @@
   --bot: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
 }
+/* Increase Contrast: labels go to the secondary ink and rules darken enough to read as edges (2.9:1) */
+@media (prefers-contrast: more) {
+  :root { --muted: var(--ink-2); --rule: #8A8F96; --hair: #B4B9BE; }
+  :root .slide.inv { --muted: #C9CDD1; --rule: #6A7078; }
+}
 
 @font-face { font-family: "Heros"; src: url("fonts/texgyreheros-regular.otf") format("opentype"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Heros"; src: url("fonts/texgyreheros-bold.otf") format("opentype"); font-weight: 700; font-display: swap; }
@@ -44,7 +49,7 @@ body { margin: 0; overflow: hidden; overscroll-behavior: none; background: var(-
 h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.08; letter-spacing: -0.015em; text-wrap: balance; margin: 0; }
 a { color: inherit; }
 a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.label { font: 500 0.68rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.label { font: 500 0.72rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .wrap { width: 100%; max-width: 74rem; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 3rem); box-sizing: border-box; }
 @media (min-width: 48rem) { .deck .wrap { padding-right: max(3.5rem, 4vw); } .deck .t-grid { padding-left: max(3.5rem, 4vw); } }   /* clear of the sheet index at the side; the index, evenly, so it centres on the page */
 
@@ -54,10 +59,10 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--charcoal); }
 .brand svg { display: block; height: 1rem; width: auto; fill: currentColor; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: clamp(1rem, 2.2vw, 1.75rem); }
-.nav a { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding-block: 0.4rem;
+.nav a { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; padding-block: 0.6rem;
          border-bottom: 1.5px solid transparent; }
 .nav a:hover { color: var(--ink); border-bottom-color: var(--rule); }
-.nav a[aria-current] { color: var(--ink); border-bottom-color: var(--ink); }
+.nav a[aria-current] { color: var(--ink); border-bottom-color: var(--accent); }
 .menu-btn { display: none; margin-left: auto; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--sheet);
             color: var(--ink); cursor: pointer; align-content: center; justify-items: center; gap: 4px; }
 .menu-btn span { display: block; width: 1rem; height: 1.5px; background: currentColor; transition: transform 0.25s ease, opacity 0.2s ease; }
@@ -91,20 +96,24 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .slide { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; overflow: clip;
          padding-block: clamp(1rem, 4vh, 3rem); background: var(--paper); visibility: hidden; transform: translateY(100%); }
 .slide.shown { visibility: visible; }
-.slide.anim { transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
+.slide.anim { transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
+.slide.fade { animation: fade-in 0.2s ease-out; }
+@keyframes fade-in { from { opacity: 0; } }
+/* a sheet taller than the room (large text, a short window) scrolls inside itself; steps move on at its ends */
+.slide.tall { overflow-y: auto; justify-content: flex-start; touch-action: pan-y; overscroll-behavior: contain; }
 
 /* the sheet index at the right edge: a scale with a tick per sheet */
 .index-scale { position: fixed; z-index: 5; right: clamp(0.5rem, 1.5vw, 1.25rem); top: calc(50% + (var(--hdr) - var(--ftr)) / 2); transform: translateY(-50%);
                display: grid; border-left: 1px solid var(--rule); }
-.index-scale button { display: flex; align-items: center; gap: 0.45rem; height: 1.6rem; padding: 0 0 0 0; border: 0; background: none; cursor: pointer;
-                      font: 500 0.6rem/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.index-scale button { display: flex; align-items: center; gap: 0.45rem; height: 1.75rem; padding: 0 0.25rem 0 0; border: 0; background: none; cursor: pointer;
+                      font: 500 0.7rem/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .index-scale button::before { content: ""; width: 0.5rem; height: 1px; background: var(--rule); transition: width 0.25s ease, background 0.25s ease; }
 .index-scale button:hover { color: var(--ink); }
 .index-scale button[aria-current] { color: var(--accent); }
 .index-scale button[aria-current]::before { width: 0.95rem; height: 2px; background: var(--accent); }
 @media (max-width: 48rem) { .index-scale { display: none; } }
 .reading .index-scale { visibility: hidden; }
-.inv-on .index-scale { --rule: #4A4F56; --muted: #8E949B; }
+.inv-on .index-scale { --rule: #4A4F56; --muted: #8E949B; --accent: #6E9BD8; }   /* the blue, lightened to 6.3:1 on the ink */
 
 /* ---- the marks: a model's name in Heros Cn Bold with the dot mn after it; mn alone on the index */
 .mark { display: block; width: auto; fill: currentColor; overflow: visible; }
@@ -171,10 +180,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .p-text { display: grid; gap: clamp(0.7rem, 2vh, 1.1rem); justify-items: start; align-content: start; min-width: 0; }
 .eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.9rem; }
 .p-mark .mark { height: clamp(2.6rem, 7vw, 4.4rem); }
+.p-title { font-size: clamp(1.7rem, 3.6vw, 2.7rem); line-height: 1.08; max-width: 20ch; color: var(--ink); }   /* a sheet titled in words, not a mark */
 .tagline { margin: 0; max-width: 46ch; color: var(--ink-2); font-size: clamp(0.95rem, 1.5vw, 1.08rem); line-height: 1.5; }
 .spec { margin: 0; width: 100%; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 1.5rem; border-top: 1.5px solid var(--ink); font-size: 0.9rem; }
 .spec dt, .spec dd { margin: 0; padding: 0.5rem 0; border-bottom: 1px solid var(--hair); }
-.spec dt { font: 500 0.66rem/1.9 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.spec dt { font: 500 0.7rem/1.9 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .spec dd { color: var(--ink); }
 .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .btn { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.7rem 1rem; border: 1px solid var(--ink); border-radius: 2px; background: transparent; color: var(--ink);
@@ -186,7 +196,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .btn .repo { font: 500 0.72rem/1 var(--mono); opacity: 0.7; }
 @media (min-width: 60rem) { .p-body { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2.5rem, 5vw, 4.5rem); } }
 @media (max-width: 40rem) {
-  .spec { font-size: 0.8rem; } .spec dt, .spec dd { padding: 0.32rem 0; } .spec dt { font-size: 0.6rem; }
+  .spec { font-size: 0.8rem; } .spec dt, .spec dd { padding: 0.32rem 0; } .spec dt { font-size: 0.7rem; }
   .tagline { font-size: 0.92rem; line-height: 1.42; }
   .btn { padding: 0.6rem 0.8rem; } .btn .repo { display: none; }
   .demo figcaption .ct { display: none; }
@@ -199,21 +209,21 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .demo-frame { position: relative; aspect-ratio: 560 / 380; max-width: 100%; overflow: hidden; background: var(--sheet); outline: 1px solid var(--rule); outline-offset: 0; }
 .demo-frame.video { background: #FDFDFD; }
 .demo-frame video { display: block; width: 100%; height: 100%; object-fit: contain; }
-.demo figcaption { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font: 500 0.68rem/1.35 var(--mono); color: var(--ink-2); }
+.demo figcaption { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font: 500 0.72rem/1.35 var(--mono); color: var(--ink-2); }
 .demo figcaption b { font-weight: 600; color: var(--ink); margin-right: 0.5rem; }
-.demo-toggle { flex: none; font: 500 0.66rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: none;
-               border: 1px solid var(--rule); border-radius: 2px; padding: 0.4rem 0.6rem; cursor: pointer; }
+.demo-toggle { flex: none; font: 500 0.7rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: none;
+               border: 1px solid var(--rule); border-radius: 2px; min-height: 1.75rem; padding: 0.4rem 0.6rem; cursor: pointer; }
 .demo-toggle:hover { border-color: var(--ink); }
 .demo-pending { position: relative; aspect-ratio: 560 / 380; max-width: 100%; box-sizing: border-box; display: grid; place-items: center; border: 1px dashed var(--rule);
                 background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--hair) 50%, transparent calc(50% + 0.5px)),
                             linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--hair) 50%, transparent calc(50% + 0.5px)), var(--sheet); }
-.demo-pending span { font: 500 0.66rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--sheet); padding: 0.45rem 0.6rem; border: 1px solid var(--hair); }
+.demo-pending span { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--sheet); padding: 0.45rem 0.6rem; border: 1px solid var(--hair); }
 
 /* ---- products: a catalogue table */
 .cat-head { display: grid; gap: 0.6rem; justify-items: start; margin-bottom: clamp(1rem, 3vh, 2rem); }
 .cat-head h2, .c-big { font-size: clamp(2rem, 5vw, 3.4rem); }
 .catalogue { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.catalogue th { text-align: left; font: 500 0.64rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 1rem 0.55rem 0;
+.catalogue th { text-align: left; font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 1rem 0.55rem 0;
                 border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
 .catalogue td { padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--hair); vertical-align: middle; }
 .catalogue .mark { height: 1.3rem; }
@@ -236,14 +246,23 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 /* ---- a model's details: a document that slides up over the sheet and scrolls on its own */
 .detail { position: fixed; z-index: 4; left: 0; right: 0; top: calc(var(--hdr) + var(--top)); bottom: calc(var(--ftr) + var(--bot)); overflow-y: auto; overscroll-behavior: contain;
-          background: var(--paper); transform: translateY(100%); visibility: hidden; transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0.6s; }
+          background: var(--paper); transform: translateY(100%); visibility: hidden; transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0.45s; }
 .detail.open { transform: none; visibility: visible; transition-delay: 0s; }
-@media (prefers-reduced-motion: reduce) { .detail, .detail.open, .slide.anim, .menu-btn span { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .slide.anim, .menu-btn span { transition: none; }
+  .detail { transform: none; opacity: 0; transition: opacity 0.2s ease, visibility 0s linear 0.2s; }   /* fades, doesn't slide */
+  .detail.open { opacity: 1; }
+}
 .d-wrap { max-width: 46rem; margin: 0 auto; padding-inline: clamp(1rem, 4vw, 1.5rem); box-sizing: border-box; }
 .d-head { padding-block: clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 5vw, 2.5rem); border-bottom: 1px solid var(--rule); }
 .d-head .d-wrap { display: grid; gap: 1rem; justify-items: start; }
 .d-back { font: 500 0.7rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); text-decoration: none; }
 .d-back:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (pointer: coarse) {                                         /* fingers: 44px targets */
+  .d-back { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .demo-toggle { min-height: 2.75rem; padding-inline: 0.9rem; }
+  .menu-btn { width: 2.75rem; height: 2.75rem; }
+}
 .d-head .p-mark { margin-top: 0.75rem; }
 .d-head .tagline { font-size: clamp(1.05rem, 2.2vw, 1.25rem); max-width: 40ch; color: var(--ink); }
 .d-title { margin-top: 0.75rem; font-size: clamp(2.2rem, 7vw, 3.4rem); }
@@ -256,7 +275,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 .d-sec p { margin: 0; max-width: 62ch; }
 .d-fig { margin: 0.5rem 0 0; display: grid; gap: 0.5rem; }
 .d-fig .demo-pending { aspect-ratio: 16 / 9; }
-.d-fig figcaption { font: 500 0.68rem/1.4 var(--mono); color: var(--muted); }
+.d-fig figcaption { font: 500 0.72rem/1.4 var(--mono); color: var(--muted); }
 .d-fig figcaption b { color: var(--ink); font-weight: 600; margin-right: 0.5rem; }
 .d-photo { width: min(100%, 14rem); aspect-ratio: 4 / 5; margin-bottom: 2rem; }
 .d-links { margin: 2.5rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--rule); font: 500 0.8rem/1.4 var(--mono); }
@@ -346,7 +365,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     <div class="wrap p-body">
       <div class="p-text">
         <div class="eyebrow"><span class="label">Lab facility</span></div>
-        <h2 class="p-mark" id="name-tankmn"><span class="mark-hold" data-word="tank"><span class="sr-only">tankmn</span></span></h2>
+        <h2 class="p-title" id="name-tankmn">Random Jet Array Turbulence Generation Facility</h2>
         <p class="tagline" data-slot="projects.tankmn.summary" data-hint="One line on what tankmn is">A turbulence tank: four corner arrays of 24 pumps, 96 in all, fire water jets at random so they collide in the middle and leave a patch of even turbulence there for particle-settling experiments.</p>
         <dl class="spec">
           <dt>Envelope</dt><dd>105 &times; 105 &times; 129 cm</dd>
@@ -397,7 +416,6 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   <!-- contact -->
   <section class="slide inv" data-id="contact" data-name="Contact" aria-labelledby="name-contact">
     <div class="wrap c-body">
-      <span class="label">Contact</span>
       <h2 class="c-big" id="name-contact">Contact</h2>
       <p class="tagline ph">Placeholder: the best way to reach you, and what you&rsquo;re happy to hear about.</p>
       <div class="actions"><a class="btn btn-fill" href="https://github.com/SPC3MN" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-gh"/></svg>GitHub <span class="repo">SPC3MN</span></a></div>
@@ -463,14 +481,14 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
 
 <!-- ===== title block, bottom ===== -->
 <footer class="ftr">
-  <span class="f-name">Index</span>
+  <span class="f-name" aria-live="polite">Index</span>
   <span class="f-page">00 / 04</span>
   <button type="button" class="f-prev" aria-label="Previous sheet"><svg aria-hidden="true"><use href="#i-up"/></svg></button>
   <button type="button" class="f-next" aria-label="Next sheet"><svg aria-hidden="true"><use href="#i-down"/></svg></button>
 </footer>
 
 <div class="editbar" id="editbar" hidden>
-  <div class="inner"><span class="status" id="status">Tap Edit to write</span><button type="button" id="edit">Edit</button></div>
+  <div class="inner"><span class="status" id="status">Select Edit to write</span><button type="button" id="edit">Edit</button></div>
 </div>
 
 
@@ -480,6 +498,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
   const slots = [...document.querySelectorAll("[data-slot]")];
   const bar = document.getElementById("editbar"), statusEl = document.getElementById("status"), editBtn = document.getElementById("edit");
   let content = null, art = null, editing = false, dirty = false, saving = false, readOnly = false, timer = null, retried = false;
+  const tap = window.matchMedia && matchMedia("(pointer: coarse)").matches ? "Tap" : "Click";
+  statusEl.textContent = tap + " Edit to write";
 
   const get = (path) => path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), content);
   function put(path, value) {
@@ -519,7 +539,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     }
     editBtn.textContent = on ? "Done" : "Edit";
     if (!on) { if (dirty) save(); else say(readOnly ? "This view can't save" : "Saved"); }
-    else say(dirty ? "Unsaved changes" : "Tap any outlined text to write");
+    else say(dirty ? "Unsaved changes" : tap + " any outlined text to write");
     render();
   }
   editBtn.addEventListener("click", () => setEditing(!editing));
@@ -817,6 +837,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const h = openId === "about" ? "#about" : id ? "#" + id + (openId ? "-details" : "") : location.pathname + location.search;
       try { history.replaceState(null, "", h); } catch (e) {}
     }
+    // a sheet too tall for the room scrolls inside itself (see .slide.tall); coming from below, it opens at its foot
+    const enter = (s, dir) => { s.scrollTop = dir < 0 ? s.scrollHeight : 0; };
+    const room = (s, dir) => s.classList.contains("tall") &&
+      (dir > 0 ? s.scrollTop + s.clientHeight < s.scrollHeight - 1 : s.scrollTop > 0);   // can it scroll further that way?
+    function measureTall() { for (const s of slides) { s.classList.remove("tall"); s.classList.toggle("tall", s.scrollHeight > s.clientHeight + 1); } }
     function settle(n) {
       slides.forEach((s, i) => {
         s.classList.remove("anim");
@@ -831,8 +856,9 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       const from = slides[index], to = slides[n], dir = n > index ? 1 : -1;
       index = n;
       mark();
-      if (still) { settle(n); return; }
+      if (still) { settle(n); to.classList.remove("fade"); void to.offsetWidth; to.classList.add("fade"); enter(to, dir); return; }
       busy = true;
+      enter(to, dir);
       to.classList.remove("anim");
       to.style.transform = `translateY(${dir * 100}%)`;
       to.classList.add("shown");
@@ -841,7 +867,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       from.style.transform = `translateY(${-dir * 100}%)`;
       to.style.transform = "none";
       from.inert = true; to.inert = false;
-      setTimeout(() => { settle(n); busy = false; }, 720);
+      setTimeout(() => { settle(n); busy = false; }, 520);
     }
 
     // ---- details: a document over the sheet, at #<model>-details; Back, the browser's Back or Esc close it
@@ -887,22 +913,24 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
     const inText = (el) => editing && el && el.closest && el.closest("[data-slot]");
     fPrev.addEventListener("click", () => go(index - 1));
     fNext.addEventListener("click", () => go(index + 1));
-    let sy = 0, sx = 0, t0 = 0, axis = "";
+    let sy = 0, sx = 0, t0 = 0, axis = "", roomAt = null;
     deckEl.addEventListener("touchstart", (e) => {
       if (e.touches.length !== 1 || inText(e.target)) { axis = "skip"; return; }
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = performance.now(); axis = "";
+      const s = slides[index]; roomAt = { up: room(s, -1), down: room(s, 1) };
     }, { passive: true });
     deckEl.addEventListener("touchmove", (e) => {
       if (axis === "skip") return;
       const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
       if (!axis && Math.hypot(dx, dy) > 8) axis = Math.abs(dy) > Math.abs(dx) ? "y" : "x";
-      if (axis === "y" && e.cancelable) e.preventDefault();
+      if (axis === "y" && e.cancelable && !slides[index].classList.contains("tall")) e.preventDefault();
     }, { passive: false });
     deckEl.addEventListener("touchend", (e) => {
       const was = axis; axis = "";
       if (was !== "y") return;
       const dy = e.changedTouches[0].clientY - sy, dt = Math.max(1, performance.now() - t0);
       if (Math.abs(dy) < 30 && Math.abs(dy) / dt < 0.3) return;
+      if (dy < 0 ? roomAt.down : roomAt.up) return;                    // that swipe scrolled the sheet
       go(index + (dy < 0 ? 1 : -1));
     }, { passive: true });
     // one wheel turn or trackpad swipe moves one sheet; the rest of that gesture (and its coasting) is ignored
@@ -913,6 +941,7 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       if (now - wheelLast > 240) { wheelSum = 0; wheelSpent = false; }
       wheelLast = now;
       if (wheelSpent || busy) return;
+      if (room(slides[index], Math.sign(e.deltaY))) { wheelSpent = true; return; }   // scrolling a tall sheet; this gesture stays on it
       wheelSum += e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
       if (Math.abs(wheelSum) > 40) { wheelSpent = true; go(index + Math.sign(wheelSum)); }
     }, { passive: true });
@@ -928,6 +957,8 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
       else if (k === "End") n = slides.length - 1;
       if (n === null) return;
       e.preventDefault();
+      const s = slides[index], dir = n - index, page = k !== "ArrowDown" && k !== "ArrowUp";
+      if (Math.abs(dir) === 1 && room(s, dir)) { s.scrollBy({ top: dir * s.clientHeight * (page ? 0.85 : 0.2), behavior: still ? "auto" : "smooth" }); return; }
       go(n);
     });
 
@@ -959,10 +990,11 @@ a:focus-visible, button:focus-visible, [contenteditable]:focus-visible { outline
           demo.style.justifySelf = "center";
         }
       }
+      measureTall();
     }
     fitDemos();
     window.addEventListener("resize", fitDemos);
-    if ("ResizeObserver" in window) { const ro = new ResizeObserver(() => requestAnimationFrame(fitDemos)); document.querySelectorAll(".p-text").forEach((t) => ro.observe(t)); }
+    if ("ResizeObserver" in window) { const ro = new ResizeObserver(() => requestAnimationFrame(fitDemos)); document.querySelectorAll(".p-text, .slide > .wrap").forEach((t) => ro.observe(t)); }
   })();
   // ---- video runs (tankmn): play only while on screen and not paused; under reduced motion, the still poster
   (function videoRuns() {
